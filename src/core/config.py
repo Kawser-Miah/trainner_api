@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     authentication_prefix: str = "/auth"
     register_account_prefix: str = "/register"
     verify_email_prefix: str = "/verify-email"
+    resend_otp_prefix: str = "/resend-verification-code"
 
 
     host: str = "0.0.0.0"

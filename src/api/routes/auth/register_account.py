@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 from src.core.config import settings
-from src.schemas.user.account import RegisterAccountRequest, RegisterAccountResponse
+from src.schemas.auth.account import RegisterAccountRequest, RegisterAccountResponse
 from src.core.common_responses import CommonResponse
 from src.service.auth.register import register_user
 

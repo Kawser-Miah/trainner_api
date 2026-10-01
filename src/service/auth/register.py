@@ -1,8 +1,8 @@
 from src.core.exceptions import EmailAlreadyExistsException
-from src.utils.otp_generation import generate_otp
+from src.utils.otp_generation import generate_otp, get_otp_expiry
 from src.utils.security import hash_password
 from src.data.users import users, otps
-from src.schemas.user.account import RegisterAccountRequest
+from src.schemas.auth.account import RegisterAccountRequest
 from src.service.auth.email_service import send_otp_email
 from starlette.concurrency import run_in_threadpool
 
@@ -17,6 +17,7 @@ async def register_user(
 
     # Generate OTP
     otp = generate_otp()
+    otp_expiry = get_otp_expiry()
 
     # Create user
     user = {
@@ -35,6 +36,7 @@ async def register_user(
     otp_entry = {
         "user_id": user["id"],
         "otp": otp,
+        "expires_at": otp_expiry,
     }
 
     # Store user

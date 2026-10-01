@@ -32,3 +32,26 @@ class EmailAlreadyExistsException(AppException):
             status=409,
             error="EMAIL_ALREADY_EXISTS",
         )
+class InvalidOTPException(AppException):
+    def __init__(self):
+        super().__init__(
+            error="INVALID_OTP",
+            message="The OTP is invalid or has expired.",
+            status=400,
+        )
+
+class UserNotFoundException(AppException):
+    def __init__(self):
+        super().__init__(
+            error="USER_NOT_FOUND",
+            message="The user was not found.",
+            status=404,
+        )
+
+class OTPNotExpiredException(AppException):
+    def __init__(self):
+        super().__init__(
+            error="OTP_NOT_EXPIRED",
+            message="The previous OTP is still valid. Please wait until it expires before requesting a new one.",
+            status=400,
+        )
