@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     authentication_prefix: str = "/auth"
     register_account_prefix: str = "/register"
+    verify_email_prefix: str = "/verify-email"
 
 
     host: str = "0.0.0.0"
