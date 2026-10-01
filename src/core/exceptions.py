@@ -55,3 +55,11 @@ class OTPNotExpiredException(AppException):
             message="The previous OTP is still valid. Please wait until it expires before requesting a new one.",
             status=400,
         )
+
+class InvalidTokenException(AppException):
+    def __init__(self):
+        super().__init__(
+            error="INVALID_TOKEN",
+            message="The provided token is invalid or has expired.",
+            status=400,
+        )
