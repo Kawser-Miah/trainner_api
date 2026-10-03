@@ -1,52 +1,63 @@
+from sqlalchemy.orm import Session
+
 from src.core.exceptions import EmailAlreadyExistsException
-from src.utils.otp_generation import generate_otp, get_otp_expiry
-from src.utils.security import hash_password
-from src.data.users import users, otps
+from src.repository.auth.user_repository import (
+    create_user,
+    get_user_by_email,
+)
+from src.repository.auth.otp_repository import create_otp
 from src.schemas.auth.account import RegisterAccountRequest
 from src.service.auth.email_service import send_otp_email
-from starlette.concurrency import run_in_threadpool
+from src.utils.otp_generation import generate_otp, get_otp_expiry
+from src.utils.security import hash_password
 
 
 async def register_user(
+    db: Session,
     register_account_request: RegisterAccountRequest,
 ):
+    email = str(register_account_request.email)
+
     # Check whether email already exists
-    for user in users:
-        if user["email"] == str(register_account_request.email):
-            raise EmailAlreadyExistsException()
+    existing_user = get_user_by_email(
+        db=db,
+        email=email,
+    )
+
+    if existing_user:
+        raise EmailAlreadyExistsException()
 
     # Generate OTP
-    otp = generate_otp()
+    otp_code = generate_otp()
     otp_expiry = get_otp_expiry()
 
     # Create user
-    user = {
-        "id": str(len(users) + 1),
-        "full_name": register_account_request.full_name,
-        "role": register_account_request.role,
-        "email": str(register_account_request.email),
-        "phone": register_account_request.phone,
-        "password": await run_in_threadpool(
-            hash_password,
+    user = create_user(
+        db=db,
+        full_name=register_account_request.full_name,
+        email=email,
+        phone=register_account_request.phone,
+        password_hash=hash_password(
             register_account_request.password
         ),
-        "is_verified": False,
-    }
+        role=register_account_request.role,
+    )
 
-    otp_entry = {
-        "user_id": user["id"],
-        "otp": otp,
-        "expires_at": otp_expiry,
-    }
+    # Create OTP
+    create_otp(
+        db=db,
+        user_id=user.id,
+        otp_code=otp_code,
+        expires_at=otp_expiry,
+    )
 
-    # Store user
-    users.append(user)
-    otps.append(otp_entry)
+    # Save user + OTP
+    db.commit()
 
     # Send OTP
     await send_otp_email(
-        email=user["email"],
-        otp=otp,
+        email=user.email,
+        otp=otp_code,
     )
 
     return user
