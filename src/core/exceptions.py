@@ -70,7 +70,7 @@ class InvalidCredentialsException(AppException):
         message: str = "Invalid email or password.",
     ):
         super().__init__(
-            code="INVALID_CREDENTIALS",
+            error="INVALID_CREDENTIALS",
             message=message,
             status=401,
         )

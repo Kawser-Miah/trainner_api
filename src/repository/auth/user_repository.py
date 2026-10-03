@@ -52,3 +52,15 @@ def get_user_by_id(
     )
 
     return result.scalar_one_or_none()
+
+def update_user_password(
+    db: Session,
+    *,
+    user: User,
+    password_hash: str,
+) -> User:
+    user.password_hash = password_hash
+
+    db.flush()
+
+    return user
