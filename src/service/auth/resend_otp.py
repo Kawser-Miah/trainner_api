@@ -7,8 +7,7 @@ from src.core.exceptions import (
     UserNotFoundException,
 )
 from src.repository.auth.otp_repository import (
-    create_otp,
-    delete_otp,
+    create_or_update_otp,
     get_otp_by_user_id,
 )
 from src.repository.auth.user_repository import get_user_by_id
@@ -23,6 +22,7 @@ async def resend_otp(
     db: Session,
     user_id: str,
 ):
+    # Convert API user ID to database user ID
     database_user_id = int(user_id)
 
     # Find user
@@ -38,7 +38,6 @@ async def resend_otp(
     existing_otp = get_otp_by_user_id(
         db=db,
         user_id=database_user_id,
-        purpose="EMAIL_VERIFICATION",
     )
 
     # Check previous OTP
@@ -48,23 +47,16 @@ async def resend_otp(
         if datetime.now(timezone.utc) < existing_otp.expires_at:
             raise OTPNotExpiredException()
 
-        # Previous OTP has expired, remove it
-        delete_otp(
-            db=db,
-            otp=existing_otp,
-        )
-
     # Generate new OTP
     otp_code = generate_otp()
     otp_expires_at = get_otp_expiry()
 
-    # Store new OTP
-    create_otp(
+    # Create new OTP or replace existing OTP
+    create_or_update_otp(
         db=db,
         user_id=user.id,
         otp_code=otp_code,
         expires_at=otp_expires_at,
-        purpose="EMAIL_VERIFICATION",
     )
 
     # Save changes

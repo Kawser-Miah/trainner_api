@@ -28,7 +28,6 @@ async def verify_email(
     otp_entry = get_otp_by_user_id(
         db=db,
         user_id=database_user_id,
-        purpose="EMAIL_VERIFICATION",
     )
 
     if otp_entry is None:

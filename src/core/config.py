@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     refresh_token_prefix: str = "/refresh-token"
     sign_in_prefix: str = "/signin"
     reset_password_prefix: str = "/reset-password"
+    forgot_password_prefix: str = "/forgot-password"
 
 
     host: str = "0.0.0.0"

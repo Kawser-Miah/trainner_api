@@ -5,7 +5,7 @@ from src.repository.auth.user_repository import (
     create_user,
     get_user_by_email,
 )
-from src.repository.auth.otp_repository import create_otp
+from src.repository.auth.otp_repository import create_or_update_otp
 from src.schemas.auth.account import RegisterAccountRequest
 from src.service.auth.email_service import send_otp_email
 from src.utils.otp_generation import generate_otp, get_otp_expiry
@@ -44,13 +44,13 @@ async def register_user(
     )
 
     # Create OTP
-    create_otp(
+    create_or_update_otp(
         db=db,
         user_id=user.id,
         otp_code=otp_code,
         expires_at=otp_expiry,
-        purpose="EMAIL_VERIFICATION",
     )
+
 
     # Save user + OTP
     db.commit()

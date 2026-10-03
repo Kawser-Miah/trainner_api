@@ -17,8 +17,8 @@ class OTPVerification(Base):
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
         nullable=False,
-        index=True,
     )
 
     otp_code: Mapped[str] = mapped_column(
@@ -28,11 +28,6 @@ class OTPVerification(Base):
 
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
-    )
-
-    purpose: Mapped[str] = mapped_column(
-        String(30),
         nullable=False,
     )
 
