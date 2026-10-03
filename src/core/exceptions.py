@@ -63,3 +63,14 @@ class InvalidTokenException(AppException):
             message="The provided token is invalid or has expired.",
             status=400,
         )
+
+class InvalidCredentialsException(AppException):
+    def __init__(
+        self,
+        message: str = "Invalid email or password.",
+    ):
+        super().__init__(
+            code="INVALID_CREDENTIALS",
+            message=message,
+            status=401,
+        )
