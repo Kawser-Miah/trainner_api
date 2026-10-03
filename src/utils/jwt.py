@@ -17,7 +17,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 
 def create_access_token(
-    user_id: str,
+    user_id: int | str,
     role: str,
     full_name: str,
 ) -> tuple[str, int]:
@@ -35,7 +35,7 @@ def create_access_token(
     )
 
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "role": role,
         "full_name": full_name,
         "type": "access",
@@ -55,7 +55,7 @@ def create_access_token(
 
 
 def create_refresh_token(
-    user_id: str,
+    user_id: int | str,
 ) -> str:
     """
     Create a refresh JWT token.
@@ -66,7 +66,7 @@ def create_refresh_token(
     )
 
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "type": "refresh",
         "exp": expires_at,
     }

@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class VerifyEmailRequest(BaseModel):
-    user_id: str
+    user_id: str = Field(..., pattern=r"^\d+$")
     code: str
 
 
@@ -16,5 +16,5 @@ class VerifyEmailResponse(BaseModel):
     coach_status: str | None
 
 class ResendOTPRequest(BaseModel):
-    user_id: str
+    user_id: str = Field(..., pattern=r"^\d+$")
 

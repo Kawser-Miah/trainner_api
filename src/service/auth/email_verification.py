@@ -19,13 +19,15 @@ from src.utils.jwt import (
 
 async def verify_email(
     db: Session,
-    user_id: int,
+    user_id: str,
     code: str,
 ):
+    database_user_id = int(user_id)
+
     # Find OTP
     otp_entry = get_otp_by_user_id(
         db=db,
-        user_id=user_id,
+        user_id=database_user_id,
     )
 
     if otp_entry is None:
@@ -42,7 +44,7 @@ async def verify_email(
     # Find user
     user = get_user_by_id(
         db=db,
-        user_id=user_id,
+        user_id=database_user_id,
     )
 
     if user is None:
@@ -75,7 +77,7 @@ async def verify_email(
         access_token=access_token,
         access_token_valid_till=access_token_valid_till,
         refresh_token=refresh_token,
-        user_id=user.id,
+        user_id=str(user.id),
         role=user.role,
         is_completed=user.is_completed,
         coach_status=None,

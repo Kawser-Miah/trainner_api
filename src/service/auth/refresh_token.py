@@ -14,12 +14,13 @@ async def refresh_access_token(
     payload = verify_refresh_token(refresh_token)
 
     user_id = payload.get("sub")
+    database_user_id = int(user_id)
 
     # Find user
     user = None
 
     for item in users:
-        if item["id"] == user_id:
+        if item["id"] == database_user_id:
             user = item
             break
 

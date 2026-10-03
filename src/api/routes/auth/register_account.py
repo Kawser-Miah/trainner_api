@@ -33,6 +33,6 @@ async def register_account(
         code=status.HTTP_201_CREATED,
         message="Registration completed successfully. OTP sent to your email for verification.",
         data={
-            "user_id": user.id,
+            "user_id": str(user.id),
         },
     )

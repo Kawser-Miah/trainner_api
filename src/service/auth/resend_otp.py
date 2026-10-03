@@ -21,12 +21,14 @@ from src.utils.otp_generation import (
 
 async def resend_otp(
     db: Session,
-    user_id: int,
+    user_id: str,
 ):
+    database_user_id = int(user_id)
+
     # Find user
     user = get_user_by_id(
         db=db,
-        user_id=user_id,
+        user_id=database_user_id,
     )
 
     if user is None:
@@ -35,7 +37,7 @@ async def resend_otp(
     # Find existing OTP
     existing_otp = get_otp_by_user_id(
         db=db,
-        user_id=user_id,
+        user_id=database_user_id,
     )
 
     # Check previous OTP
@@ -73,5 +75,5 @@ async def resend_otp(
     )
 
     return {
-        "user_id": user.id,
+        "user_id": str(user.id),
     }
