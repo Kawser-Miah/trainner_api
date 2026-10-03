@@ -38,6 +38,7 @@ async def resend_otp(
     existing_otp = get_otp_by_user_id(
         db=db,
         user_id=database_user_id,
+        purpose="EMAIL_VERIFICATION",
     )
 
     # Check previous OTP
@@ -63,6 +64,7 @@ async def resend_otp(
         user_id=user.id,
         otp_code=otp_code,
         expires_at=otp_expires_at,
+        purpose="EMAIL_VERIFICATION",
     )
 
     # Save changes

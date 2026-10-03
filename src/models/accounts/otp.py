@@ -31,6 +31,11 @@ class OTPVerification(Base):
         nullable=False,
     )
 
+    purpose: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+    )
+
     user = relationship(
         "User",
         back_populates="otp_verifications",

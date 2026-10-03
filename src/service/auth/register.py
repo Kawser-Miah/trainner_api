@@ -49,6 +49,7 @@ async def register_user(
         user_id=user.id,
         otp_code=otp_code,
         expires_at=otp_expiry,
+        purpose="EMAIL_VERIFICATION",
     )
 
     # Save user + OTP
