@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     supabase_anon_key: str = ""
     supabase_service_key: str = ""
     google_api_key: str = ""
+    DATABASE_URL: str = ""
     
     model_config = ConfigDict(
         env_file=".env",
