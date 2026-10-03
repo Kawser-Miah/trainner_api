@@ -21,24 +21,13 @@ class OTPVerification(Base):
         index=True,
     )
 
-    otp: Mapped[str] = mapped_column(
+    otp_code: Mapped[str] = mapped_column(
         String(6),
         nullable=False,
     )
 
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
-    )
-
-    verified_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=datetime.utcnow,
         nullable=False,
     )
 
