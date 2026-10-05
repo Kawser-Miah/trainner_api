@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     forgot_password_prefix: str = "/forgot-password"
     change_password_prefix: str = "/change-password"
     verify_reset_code_prefix: str = "/verify-reset-code"
+    me_prefix: str = "/me"
+
 
 
 
