@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     sign_in_prefix: str = "/signin"
     reset_password_prefix: str = "/reset-password"
     forgot_password_prefix: str = "/forgot-password"
+    change_password_prefix: str = "/change-password"
 
 
     host: str = "0.0.0.0"

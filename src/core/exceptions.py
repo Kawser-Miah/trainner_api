@@ -74,3 +74,15 @@ class InvalidCredentialsException(AppException):
             message=message,
             status=401,
         )
+
+
+class InvalidOldPasswordException(AppException):
+    def __init__(
+        self,
+        message: str = "Incorrect old password.",
+    ):
+        super().__init__(
+            error="INVALID_OLD_PASSWORD",
+            message=message,
+            status=400,
+        )
