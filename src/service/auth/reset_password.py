@@ -6,7 +6,7 @@ from src.repository.auth.user_repository import (
     update_user_password,
 )
 from src.schemas.auth.reset_password import ResetPasswordRequest
-from src.utils.jwt import verify_access_token
+from src.utils.jwt import verify_password_reset_token
 from src.utils.security import hash_password
 
 
@@ -14,10 +14,11 @@ async def reset_password(
     db: Session,
     request: ResetPasswordRequest,
 ):
-    # Verify access token
-    payload = verify_access_token(
+    # Verify password reset token
+    payload = verify_password_reset_token(
         request.secret_key
     )
+
 
     # Get user ID from access token
     user_id = payload.get("sub")

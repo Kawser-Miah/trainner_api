@@ -7,7 +7,7 @@ from src.repository.auth.otp_repository import (
     get_otp_by_user_id,
 )
 from src.repository.auth.user_repository import get_user_by_id
-from src.utils.jwt import create_access_token
+from src.utils.jwt import create_password_reset_token
 
 
 async def verify_reset_code(
@@ -55,12 +55,11 @@ async def verify_reset_code(
     # Save changes
     db.commit()
 
-    # Generate access token as secret_key for reset password
-    secret_key, _ = create_access_token(
+    # Generate dedicated, short-lived password reset token
+    secret_key = create_password_reset_token(
         user_id=user.id,
-        role=user.role,
-        full_name=user.full_name,
     )
+
 
     return {
         "secret_key": secret_key,

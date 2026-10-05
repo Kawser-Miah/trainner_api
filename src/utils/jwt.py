@@ -12,8 +12,10 @@ SECRET_KEY = (
 
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-REFRESH_TOKEN_EXPIRE_DAYS = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS = 15
+PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = 5
+
 
 
 def create_access_token(
@@ -130,6 +132,60 @@ def verify_refresh_token(
 
         # Make sure this is a refresh token
         if payload.get("type") != "refresh":
+            raise InvalidTokenException()
+
+        # Make sure user ID exists
+        if payload.get("sub") is None:
+            raise InvalidTokenException()
+
+        return payload
+
+    except JWTError:
+        raise InvalidTokenException()
+
+
+def create_password_reset_token(
+    user_id: int | str,
+) -> str:
+    """
+    Create a dedicated password reset JWT token with limited lifespan (15 minutes).
+    """
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        minutes=PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
+    )
+
+    payload = {
+        "sub": str(user_id),
+        "type": "password_reset",
+        "exp": expires_at,
+    }
+
+    return jwt.encode(
+        payload,
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+
+
+def verify_password_reset_token(
+    token: str,
+) -> dict:
+    """
+    Verify and decode a password reset token.
+
+    Raises:
+        InvalidTokenException:
+            If the token is invalid, expired, or not a password reset token.
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+        )
+
+        # Make sure this is strictly a password reset token
+        if payload.get("type") != "password_reset":
             raise InvalidTokenException()
 
         # Make sure user ID exists
