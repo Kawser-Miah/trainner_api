@@ -7,6 +7,7 @@ class RegisterAccountRequest(BaseModel):
     email: EmailStr
     role: str = Field(..., min_length=2, max_length=20)
     phone: str = Field(..., min_length=10, max_length=20)
+    address: str = Field(..., min_length=2, max_length=150)
     password: str = Field(..., min_length=8, max_length=128)
     confirm_password: str = Field(..., min_length=8, max_length=128)
 
