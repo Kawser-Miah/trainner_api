@@ -64,3 +64,12 @@ def update_user_password(
     db.flush()
 
     return user
+
+
+def delete_user(
+    db: Session,
+    *,
+    user: User,
+) -> None:
+    db.delete(user)
+    db.flush()

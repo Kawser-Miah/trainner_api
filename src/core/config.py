@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     verify_reset_code_prefix: str = "/verify-reset-code"
     me_prefix: str = "/me"
     logout_prefix: str = "/logout"
+    delete_account_prefix: str = "/delete-account"
 
 
 
