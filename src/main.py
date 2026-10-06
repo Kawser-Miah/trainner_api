@@ -5,10 +5,12 @@ Provides a platform for users to find and connect with coaches in various fields
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
 from src.core.config import settings
 from src.api import router
 from src.core.exceptions import AppException
@@ -68,6 +70,12 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+# Mount static media files
+media_dir = Path("media")
+media_dir.mkdir(parents=True, exist_ok=True)
+(media_dir / "profile_images").mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
+
 # Include API routers
 app.include_router(
     router.api_router,
@@ -119,7 +127,7 @@ async def root():
         "version": settings.version,
         "description": settings.description,
         "endpoints": {
-            "predict": f"{settings.crop_disease_detection_prefix}/predict",
+            "root": f"{settings.api_prefix}/",
             "docs": "/docs",
             "redoc": "/redoc"
         },
