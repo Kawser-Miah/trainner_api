@@ -156,6 +156,7 @@ All endpoints return standard envelopes:
 | `GET` | `/api/auth/me` | Yes (Bearer) | Get authenticated user's profile | None |
 | `PATCH`| `/api/auth/me` | Yes (Bearer) | Update profile data & upload avatar | Form fields: `full_name`, `phone_number` / `phone`, `address`, file: `image` / `photo` |
 | `POST` | `/api/auth/refresh-token/` | No | Generate new access token | `RefreshTokenRequest` (`refresh_token`) |
+| `POST` | `/api/auth/logout` | Yes (Bearer) | Log out authenticated user by validating refresh token | `LogoutRequest` (`refresh`) |
 | `GET` | `/health` | No | Health check | None |
 | `GET` | `/` | No | Root metadata & docs pointers | None |
 

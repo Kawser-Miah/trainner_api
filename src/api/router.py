@@ -11,6 +11,7 @@ from src.api.routes.auth import (
     change_password,
     verify_reset_code,
     me,
+    logout,
 )
 
 
@@ -25,6 +26,7 @@ api_router.include_router(forgot_password.router, prefix=settings.authentication
 api_router.include_router(change_password.router, prefix=settings.authentication_prefix)
 api_router.include_router(verify_reset_code.router, prefix=settings.authentication_prefix)
 api_router.include_router(me.router, prefix=settings.authentication_prefix)
+api_router.include_router(logout.router, prefix=settings.authentication_prefix)
 
 
 
