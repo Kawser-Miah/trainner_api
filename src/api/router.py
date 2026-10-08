@@ -36,8 +36,3 @@ api_router.include_router(delete_account.router, prefix=settings.authentication_
 # Provider endpoints
 api_router.include_router(provider_coach_profile_router, prefix=settings.provider_prefix)
 api_router.include_router(provider_coach_profile_router, prefix=settings.provider_prefix.lower(), include_in_schema=False)
-
-
-
-
-

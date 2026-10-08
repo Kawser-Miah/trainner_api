@@ -17,6 +17,7 @@ pwdlib
 pydantic
 pydantic-settings
 python-multipart
+mutagen
 
 # HTTP Client
 httpx

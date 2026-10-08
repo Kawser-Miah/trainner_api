@@ -34,6 +34,8 @@ def create_coach_profile(
     profile_photo: str | None = None,
     introduction_video: str | None = None,
     introduction_video_duration: int | None = 0,
+    video_duration: int | None = 0,
+    video_display_duration: str | None = "0:00",
     introduction_video_thumbnail: str | None = None,
     linkedin_url: str | None = None,
     affiliate_commission_percent: str = "20.00",
@@ -43,13 +45,16 @@ def create_coach_profile(
     status: str = "pending",
     is_completed: bool = True,
 ) -> CoachProfile:
+    dur = video_duration if video_duration is not None and video_duration > 0 else (introduction_video_duration or 0)
     profile = CoachProfile(
         user_id=user_id,
         headline=headline,
         about=about,
         profile_photo=profile_photo,
         introduction_video=introduction_video,
-        introduction_video_duration=introduction_video_duration,
+        introduction_video_duration=dur,
+        video_duration=dur,
+        video_display_duration=video_display_duration or "0:00",
         introduction_video_thumbnail=introduction_video_thumbnail,
         linkedin_url=linkedin_url,
         affiliate_commission_percent=affiliate_commission_percent,

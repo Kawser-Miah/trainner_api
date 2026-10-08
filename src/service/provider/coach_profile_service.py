@@ -30,17 +30,7 @@ from src.schemas.provider.coach_profile import (
     CoachUserSummaryResponse,
 )
 from src.utils.media import build_media_url
-
-
-def format_duration(seconds: int | None) -> str:
-    if not seconds or seconds <= 0:
-        return "0:00"
-    hours = seconds // 3600
-    minutes = (seconds % 3600) // 60
-    secs = seconds % 60
-    if hours > 0:
-        return f"{hours}:{minutes:02d}:{secs:02d}"
-    return f"{minutes}:{secs:02d}"
+from src.utils.video import extract_video_duration, format_duration
 
 
 def format_dt(dt: datetime | None) -> str:
@@ -51,17 +41,20 @@ def format_dt(dt: datetime | None) -> str:
     return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-async def save_uploaded_file(file: Any, subfolder: str) -> str | None:
+async def save_uploaded_file_with_path(
+    file: Any,
+    subfolder: str,
+) -> tuple[str | None, Path | None]:
     if file is None:
-        return None
+        return None, None
     if not hasattr(file, "filename") or not hasattr(file, "read"):
-        return None
+        return None, None
     if not getattr(file, "filename", None):
-        return None
+        return None, None
 
     content = await file.read()
     if not content or len(content) == 0:
-        return None
+        return None, None
 
     ext = Path(file.filename).suffix or ".bin"
     clean_stem = re.sub(r"[^\w\-]", "_", Path(file.filename).stem)
@@ -74,14 +67,19 @@ async def save_uploaded_file(file: Any, subfolder: str) -> str | None:
     with open(dest_path, "wb") as f:
         f.write(content)
 
-    return f"/media/coach/{subfolder}/{unique_name}"
+    return f"/media/coach/{subfolder}/{unique_name}", dest_path
+
+
+async def save_uploaded_file(file: Any, subfolder: str) -> str | None:
+    web_path, _ = await save_uploaded_file_with_path(file, subfolder)
+    return web_path
 
 
 def parse_category_ids(raw_val: Any) -> list[int]:
     if not raw_val:
         return []
     if isinstance(raw_val, list):
-        ids = []
+        ids: list[int] = []
         for x in raw_val:
             ids.extend(parse_category_ids(x))
         return ids
@@ -160,7 +158,18 @@ def to_profile_data_response(
         address=getattr(user, "address", None),
     )
 
-    duration = profile.introduction_video_duration or 0
+    duration = (
+        profile.video_duration
+        if profile.video_duration is not None and profile.video_duration > 0
+        else (profile.introduction_video_duration or 0)
+    )
+    display_duration = (
+        profile.video_display_duration
+        if profile.video_display_duration and profile.video_display_duration != "0:00"
+        else format_duration(duration)
+    )
+
+    intro_video_url = build_media_url(profile.introduction_video, request)
 
     return CoachProfileDataResponse(
         id=profile.id,
@@ -171,9 +180,14 @@ def to_profile_data_response(
         categories=categories_resp,
         certifications=certifications_resp,
         qualifications=qualifications_resp,
-        introduction_video=build_media_url(profile.introduction_video, request),
+        introduction_video=intro_video_url,
+        intro_video=intro_video_url,
+        introvideo=intro_video_url,
         introduction_video_duration=duration,
-        introduction_video_duration_display=format_duration(duration),
+        introduction_video_duration_display=display_duration,
+        video_duration=duration,
+        video_display_duration=display_duration,
+        video_duration_display=display_duration,
         introduction_video_thumbnail=build_media_url(
             profile.introduction_video_thumbnail, request
         ),
@@ -202,21 +216,47 @@ async def parse_coach_form_data(request: Request) -> dict[str, Any]:
     headline = form.get("headline")
     linkedin_url = form.get("linkedin_url")
 
-    # Duration parsing
-    duration_raw = form.get("introduction_video_duration")
-    duration = None
+    # Duration parsing (manual override if provided by client)
+    duration_raw = (
+        form.get("video_duration")
+        or form.get("introduction_video_duration")
+        or form.get("duration")
+    )
+    manual_duration: int | None = None
     if duration_raw is not None and str(duration_raw).strip().isdigit():
-        duration = int(str(duration_raw).strip())
+        manual_duration = int(str(duration_raw).strip())
 
-    # File uploads
-    profile_photo_file = form.get("profile_photo")
-    intro_video_file = form.get("introduction_video")
-    intro_thumb_file = form.get("introduction_video_thumbnail")
+    # File uploads - support multiple naming conventions
+    profile_photo_file = (
+        form.get("profile_photo")
+        or form.get("photo")
+        or form.get("image")
+        or form.get("avatar")
+    )
+    intro_video_file = (
+        form.get("introvideo")
+        or form.get("intro_video")
+        or form.get("introduction_video")
+        or form.get("video")
+    )
+    intro_thumb_file = (
+        form.get("introduction_video_thumbnail")
+        or form.get("intro_thumbnail")
+        or form.get("introvideo_thumbnail")
+        or form.get("thumbnail")
+        or form.get("video_thumbnail")
+    )
 
     # Arrays
-    category_ids = parse_category_ids(form.get("category_ids"))
-    expertises = parse_list_of_strings(form.get("expertises"))
-    languages = parse_list_of_strings(form.get("languages"))
+    category_ids = parse_category_ids(
+        form.get("category_ids") or form.get("categories")
+    )
+    expertises = parse_list_of_strings(
+        form.get("expertises") or form.get("expertise")
+    )
+    languages = parse_list_of_strings(
+        form.get("languages") or form.get("language")
+    )
 
     # Indexed bracket form structures
     cert_map: dict[int, dict[str, Any]] = {}
@@ -258,15 +298,32 @@ async def parse_coach_form_data(request: Request) -> dict[str, Any]:
             qual_items.append({"name": name, "document": doc_path})
 
     # Save top-level media files
-    profile_photo_path = await save_uploaded_file(profile_photo_file, "profile")
-    intro_video_path = await save_uploaded_file(intro_video_file, "videos")
-    intro_thumb_path = await save_uploaded_file(intro_thumb_file, "videos/thumbnails")
+    profile_photo_path, _ = await save_uploaded_file_with_path(
+        profile_photo_file, "profile"
+    )
+    intro_video_path, disk_video_path = await save_uploaded_file_with_path(
+        intro_video_file, "videos"
+    )
+    intro_thumb_path, _ = await save_uploaded_file_with_path(
+        intro_thumb_file, "videos/thumbnails"
+    )
+
+    # Automatically extract video duration from the saved video file if available
+    video_duration: int | None = manual_duration
+    if disk_video_path and disk_video_path.exists():
+        extracted = extract_video_duration(disk_video_path)
+        if extracted > 0:
+            video_duration = extracted
+
+    video_display_duration = format_duration(video_duration)
 
     return {
         "about": str(about) if about is not None else None,
         "headline": str(headline) if headline is not None else None,
         "linkedin_url": str(linkedin_url) if linkedin_url is not None else None,
-        "introduction_video_duration": duration,
+        "introduction_video_duration": video_duration,
+        "video_duration": video_duration,
+        "video_display_duration": video_display_duration,
         "profile_photo_path": profile_photo_path,
         "intro_video_path": intro_video_path,
         "intro_thumb_path": intro_thumb_path,
@@ -310,18 +367,26 @@ async def create_provider_coach_profile(
     if not categories:
         categories = get_or_create_default_categories(db)[:1]
 
+    duration = parsed["video_duration"] or 0
+    display_duration = parsed["video_display_duration"] or format_duration(duration)
+
+    headline = parsed["headline"] or getattr(user, "full_name", "") or "Coach"
+    about = parsed["about"] or ""
+
     profile = create_coach_profile(
         db=db,
         user_id=user.id,
-        headline=parsed["headline"] or "Career Coach",
-        about=parsed["about"] or "",
+        headline=headline,
+        about=about,
         profile_photo=parsed["profile_photo_path"],
         introduction_video=parsed["intro_video_path"],
-        introduction_video_duration=parsed["introduction_video_duration"] or 0,
+        introduction_video_duration=duration,
+        video_duration=duration,
+        video_display_duration=display_duration,
         introduction_video_thumbnail=parsed["intro_thumb_path"],
         linkedin_url=parsed["linkedin_url"],
-        expertises=parsed["expertises"],
-        languages=parsed["languages"],
+        expertises=parsed["expertises"] or [],
+        languages=parsed["languages"] or [],
         status="pending",
         is_completed=True,
     )
@@ -340,8 +405,8 @@ async def create_provider_coach_profile(
 
     # Sync user flags
     user.is_completed = True
-    if user.role.upper() != "PROVIDER" and user.role.upper() != "COACH":
-        user.role = "COACH"
+    if (user.role or "").strip().upper() not in ["PROVIDER", "COACH"]:
+        user.role = "PROVIDER"
 
     db.commit()
     db.refresh(profile)
@@ -356,7 +421,7 @@ async def update_provider_coach_profile(
 ) -> CoachProfileDataResponse:
     profile = get_coach_profile_by_user_id(db, user.id)
     if profile is None:
-        raise CoachProfileNotFoundException()
+        return await create_provider_coach_profile(db=db, user=user, request=request)
 
     parsed = await parse_coach_form_data(request)
 
@@ -369,9 +434,6 @@ async def update_provider_coach_profile(
     if parsed["linkedin_url"] is not None:
         profile.linkedin_url = parsed["linkedin_url"]
 
-    if parsed["introduction_video_duration"] is not None:
-        profile.introduction_video_duration = parsed["introduction_video_duration"]
-
     if parsed["profile_photo_path"] is not None:
         profile.profile_photo = parsed["profile_photo_path"]
 
@@ -380,6 +442,17 @@ async def update_provider_coach_profile(
 
     if parsed["intro_thumb_path"] is not None:
         profile.introduction_video_thumbnail = parsed["intro_thumb_path"]
+
+    if parsed["video_duration"] is not None and parsed["video_duration"] > 0:
+        dur = parsed["video_duration"]
+        profile.introduction_video_duration = dur
+        profile.video_duration = dur
+        profile.video_display_duration = format_duration(dur)
+    elif parsed["intro_video_path"] is not None:
+        dur = parsed.get("video_duration") or 0
+        profile.introduction_video_duration = dur
+        profile.video_duration = dur
+        profile.video_display_duration = format_duration(dur)
 
     if parsed["expertises"]:
         profile.expertises = parsed["expertises"]
@@ -403,8 +476,10 @@ async def update_provider_coach_profile(
         )
 
     user.is_completed = True
+    if (user.role or "").strip().upper() not in ["PROVIDER", "COACH"]:
+        user.role = "COACH"
+
     db.commit()
     db.refresh(profile)
 
     return to_profile_data_response(profile, user, request)
-

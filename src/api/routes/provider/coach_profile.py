@@ -55,7 +55,7 @@ async def get_coach_profile(
     status_code=status.HTTP_201_CREATED,
     response_model=CommonResponse,
     summary="Create Coach Profile",
-    description="Create a new coach profile for the authenticated provider using multipart/form-data.",
+    description="Create a new coach profile for the authenticated provider using multipart/form-data. The user can provide only the intro video (introvideo / intro_video / introduction_video). Video duration and display duration are automatically extracted.",
 )
 @router.post(
     "/",

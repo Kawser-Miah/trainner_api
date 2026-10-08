@@ -164,10 +164,9 @@ All endpoints return standard envelopes:
 | `PATCH`| `/api/auth/me` | Yes (Bearer) | Any | Update profile data & upload avatar | Form fields: `full_name`, `phone_number` / `phone`, `address`, file: `image` / `photo` |
 | `POST` | `/api/auth/refresh-token/` | No | Any | Generate new access token | `RefreshTokenRequest` (`refresh_token`) |
 | `POST` | `/api/auth/logout` | Yes (Bearer) | Any | Log out authenticated user by validating refresh token | `LogoutRequest` (`refresh`) |
-| `POST` | `/api/auth/delete-account` | Yes (Bearer) | Any | Permanently delete user account after password verification | `DeleteAccountRequest` (`password`) |
-| `GET` | `/Provider/coach-profile` | Yes (Bearer) | `PROVIDER` / `COACH` | Retrieve authenticated coach's profile | None |
-| `POST` | `/Provider/coach-profile` | Yes (Bearer) | `PROVIDER` / `COACH` | Create coach profile with multipart data & files | Multipart form fields: `headline`, `about`, `category_ids`, `expertises`, `languages`, `linkedin_url`, `introduction_video_duration`, files: `profile_photo`, `introduction_video`, `introduction_video_thumbnail`, bracket items: `certifications[i][name]`, `certifications[i][document]`, `qualifications[i][name]`, `qualifications[i][document]` |
-| `PATCH`| `/Provider/coach-profile` | Yes (Bearer) | `PROVIDER` / `COACH` | Update existing coach profile (same payload format) | Same multipart form fields & files as POST |
+| `GET` | `/api/Provider/coach-profile` | Yes (Bearer) | Any Authenticated | Retrieve authenticated coach's profile directly from DB | None |
+| `POST` | `/api/Provider/coach-profile` | Yes (Bearer) | Any Authenticated | Create coach profile with multipart data (user can provide only introvideo; auto-calculates and persists video duration to DB) | Multipart form fields: file `introvideo` / `intro_video` / `introduction_video`, optional profile fields |
+| `PATCH`| `/api/Provider/coach-profile` | Yes (Bearer) | Any Authenticated | Update existing coach profile (recalculates & persists duration to DB if video uploaded) | Same multipart form fields & files as POST |
 | `GET` | `/health` | No | None | Health check | None |
 | `GET` | `/` | No | None | Root metadata & docs pointers | None |
 
