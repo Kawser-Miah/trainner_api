@@ -89,3 +89,11 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+
+    coach_profile = relationship(
+        "CoachProfile",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     me_prefix: str = "/me"
     logout_prefix: str = "/logout"
     delete_account_prefix: str = "/delete-account"
+    provider_prefix: str = "/Provider"
+    coach_profile_prefix: str = "/coach-profile"
+
 
 
 

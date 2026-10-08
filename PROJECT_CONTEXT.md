@@ -52,29 +52,29 @@ D:\backend\coach/
 │   ├── api/                      # Presentation Layer
 │   │   ├── router.py             # Main API router aggregating feature routes
 │   │   └── routes/
-│   │       └── auth/             # Authentication & user profile endpoints
+│   │       ├── auth/             # Authentication & user profile endpoints
+│   │       └── provider/         # Provider coach profile endpoints (GET, POST, PATCH)
 │   ├── core/                     # Infrastructure & Cross-Cutting Concerns
 │   │   ├── config.py             # App settings (Pydantic BaseSettings from .env)
 │   │   ├── database.py           # DB Engine, SessionLocal, Base, get_db dependency
-│   │   ├── dependencies.py       # Auth dependencies (get_current_user, token parsing)
+│   │   ├── dependencies.py       # Auth dependencies (get_current_user, require_provider_role)
 │   │   ├── exceptions.py         # Custom application exceptions (AppException subclasses)
 │   │   └── common_responses.py   # Standardized API response models (CommonResponse, ErrorResponse)
-│   ├── data/                     # In-memory mock/fallback data (legacy)
-│   │   └── users.py
 │   ├── models/                   # SQLAlchemy ORM Domain Models
-│   │   └── accounts/
-│   │       ├── user.py           # User model
-│   │       └── otp.py            # OTPVerification model
+│   │   ├── accounts/             # User, OTPVerification models
+│   │   └── provider/             # Category, CoachProfile, CoachCertification, CoachQualification
 │   ├── repository/               # Data Access Layer (SQLAlchemy queries)
-│   │   └── auth/
-│   │       ├── user_repository.py# User DB queries & mutations
-│   │       └── otp_repository.py # OTP DB queries & mutations
+│   │   ├── auth/                 # User & OTP queries
+│   │   └── provider/             # CoachProfile & Category queries
 │   ├── schemas/                  # Pydantic DTOs & Validation Schemas
-│   │   └── auth/                 # Request & Response schemas
+│   │   ├── auth/                 # Auth DTOs
+│   │   └── provider/             # Coach profile request & response DTOs
 │   ├── service/                  # Business Logic Layer
-│   │   └── auth/                 # Auth services (sign in, register, OTP, profile, etc.)
+│   │   ├── auth/                 # Auth services (sign in, register, OTP, profile, etc.)
+│   │   └── provider/             # Coach profile onboarding, update, multipart parser
 │   └── utils/                    # Shared Helper Functions
 │       ├── jwt.py                # Token generation (access, refresh, password reset)
+│       ├── media.py              # Centralized base URL & media URL generator
 │       ├── otp_generation.py     # 6-digit numeric OTP generator & expiry
 │       └── security.py           # Password hashing & verification with pwdlib
 ├── .env                          # Local environment variables
@@ -114,11 +114,18 @@ D:\backend\coach/
 | `otp_code` | `String(6)` | NOT NULL | 6-digit verification code |
 | `expires_at` | `DateTime(tz)`| NOT NULL | Expiry timestamp (typically 2 minutes) |
 
+### 4.3. Provider Tables (`categories`, `coach_profiles`, etc.)
+- **`categories`**: `id` (PK), `name` (unique, indexed), `description`, `is_active`, `image`, timestamps.
+- **`coach_profiles`**: `id` (PK), `user_id` (FK `users.id`, UNIQUE), `headline`, `about`, `profile_photo`, `introduction_video`, `introduction_video_duration`, `introduction_video_thumbnail`, `linkedin_url`, `affiliate_commission_percent`, `auto_approve_affiliates`, `expertises` (JSON), `languages` (JSON), `is_completed`, `status` ('pending'), `rejection_reason`, `avg_rating`, `total_reviews`, `completed_sessions_count`, `success_rate`, timestamps.
+- **`coach_profile_categories`**: `id` (PK), `coach_profile_id` (FK), `category_id` (FK).
+- **`coach_certifications`**: `id` (PK), `coach_profile_id` (FK), `name`, `document`, `created_at`.
+- **`coach_qualifications`**: `id` (PK), `coach_profile_id` (FK), `name`, `document`, `created_at`.
+
 ---
 
 ## 5. API Reference & Authentication Specification
 
-All API routes are served under prefix: **`/api/auth`**
+All API routes are served under prefix: **`/api/auth`** and **`/Provider`** (or `/api/Provider`)
 
 ### Standard Response Envelope
 All endpoints return standard envelopes:
@@ -143,23 +150,26 @@ All endpoints return standard envelopes:
 ```
 
 ### Endpoints Matrix
-| Method | Endpoint | Auth Required | Description | Request Payload / Params |
-|---|---|:---:|---|---|
-| `POST` | `/api/auth/register/` | No | Register new user & dispatch OTP | `RegisterAccountRequest` (`full_name`, `email`, `role`, `phone`, `address`, `password`, `confirm_password`) |
-| `POST` | `/api/auth/verify-email/` | No | Verify email OTP & issue JWT tokens | `VerifyEmailRequest` (`user_id`, `code`) |
-| `POST` | `/api/auth/resend-verification-code/` | No | Resend OTP if previous is expired | `ResendOTPRequest` (`user_id`) |
-| `POST` | `/api/auth/signin/` | No | Login with email & password | `SignInRequest` (`email`, `password`) |
-| `POST` | `/api/auth/forgot-password/` | No | Send password reset OTP | `ForgotPasswordRequest` (`email`) |
-| `POST` | `/api/auth/verify-reset-code/` | No | Verify reset OTP & get secret key | `VerifyResetCodeRequest` (`user_id`, `code`) |
-| `POST` | `/api/auth/reset-password/` | No | Reset password using `secret_key` | `ResetPasswordRequest` (`secret_key`, `new_password`, `confirm_password`) |
-| `PATCH`| `/api/auth/change-password/` | Yes (Bearer) | Change password for logged-in user | `ChangePasswordRequest` (`old_password`, `new_password`, `re_new_password` / `confirm_password`) |
-| `GET` | `/api/auth/me` | Yes (Bearer) | Get authenticated user's profile | None |
-| `PATCH`| `/api/auth/me` | Yes (Bearer) | Update profile data & upload avatar | Form fields: `full_name`, `phone_number` / `phone`, `address`, file: `image` / `photo` |
-| `POST` | `/api/auth/refresh-token/` | No | Generate new access token | `RefreshTokenRequest` (`refresh_token`) |
-| `POST` | `/api/auth/logout` | Yes (Bearer) | Log out authenticated user by validating refresh token | `LogoutRequest` (`refresh`) |
-| `POST` | `/api/auth/delete-account` | Yes (Bearer) | Permanently delete user account after password verification | `DeleteAccountRequest` (`password`) |
-| `GET` | `/health` | No | Health check | None |
-| `GET` | `/` | No | Root metadata & docs pointers | None |
+| Method | Endpoint | Auth Required | Role Required | Description | Request Payload / Params |
+|---|---|:---:|:---:|---|---|
+| `POST` | `/api/auth/register/` | No | Any | Register new user & dispatch OTP | `RegisterAccountRequest` (`full_name`, `email`, `role`, `phone`, `address`, `password`, `confirm_password`) |
+| `POST` | `/api/auth/verify-email/` | No | Any | Verify email OTP & issue JWT tokens | `VerifyEmailRequest` (`user_id`, `code`) |
+| `POST` | `/api/auth/resend-verification-code/` | No | Any | Resend OTP if previous is expired | `ResendOTPRequest` (`user_id`) |
+| `POST` | `/api/auth/signin/` | No | Any | Login with email & password | `SignInRequest` (`email`, `password`) |
+| `POST` | `/api/auth/forgot-password/` | No | Any | Send password reset OTP | `ForgotPasswordRequest` (`email`) |
+| `POST` | `/api/auth/verify-reset-code/` | No | Any | Verify reset OTP & get secret key | `VerifyResetCodeRequest` (`user_id`, `code`) |
+| `POST` | `/api/auth/reset-password/` | No | Any | Reset password using `secret_key` | `ResetPasswordRequest` (`secret_key`, `new_password`, `confirm_password`) |
+| `PATCH`| `/api/auth/change-password/` | Yes (Bearer) | Any | Change password for logged-in user | `ChangePasswordRequest` (`old_password`, `new_password`, `re_new_password` / `confirm_password`) |
+| `GET` | `/api/auth/me` | Yes (Bearer) | Any | Get authenticated user's profile | None |
+| `PATCH`| `/api/auth/me` | Yes (Bearer) | Any | Update profile data & upload avatar | Form fields: `full_name`, `phone_number` / `phone`, `address`, file: `image` / `photo` |
+| `POST` | `/api/auth/refresh-token/` | No | Any | Generate new access token | `RefreshTokenRequest` (`refresh_token`) |
+| `POST` | `/api/auth/logout` | Yes (Bearer) | Any | Log out authenticated user by validating refresh token | `LogoutRequest` (`refresh`) |
+| `POST` | `/api/auth/delete-account` | Yes (Bearer) | Any | Permanently delete user account after password verification | `DeleteAccountRequest` (`password`) |
+| `GET` | `/Provider/coach-profile` | Yes (Bearer) | `PROVIDER` / `COACH` | Retrieve authenticated coach's profile | None |
+| `POST` | `/Provider/coach-profile` | Yes (Bearer) | `PROVIDER` / `COACH` | Create coach profile with multipart data & files | Multipart form fields: `headline`, `about`, `category_ids`, `expertises`, `languages`, `linkedin_url`, `introduction_video_duration`, files: `profile_photo`, `introduction_video`, `introduction_video_thumbnail`, bracket items: `certifications[i][name]`, `certifications[i][document]`, `qualifications[i][name]`, `qualifications[i][document]` |
+| `PATCH`| `/Provider/coach-profile` | Yes (Bearer) | `PROVIDER` / `COACH` | Update existing coach profile (same payload format) | Same multipart form fields & files as POST |
+| `GET` | `/health` | No | None | Health check | None |
+| `GET` | `/` | No | None | Root metadata & docs pointers | None |
 
 ---
 

@@ -97,4 +97,29 @@ class InvalidPasswordException(AppException):
             error="INVALID_PASSWORD",
             message=message,
             status=400,
-        )
+        )
+
+
+class ForbiddenRoleException(AppException):
+    def __init__(
+        self,
+        message: str = "Access denied. This service is restricted to providers only.",
+    ):
+        super().__init__(
+            error="FORBIDDEN_ROLE",
+            message=message,
+            status=403,
+        )
+
+
+class CoachProfileNotFoundException(AppException):
+    def __init__(
+        self,
+        message: str = "Coach profile not found.",
+    ):
+        super().__init__(
+            error="COACH_PROFILE_NOT_FOUND",
+            message=message,
+            status=404,
+        )
+

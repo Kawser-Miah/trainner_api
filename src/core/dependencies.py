@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.core.exceptions import (
     AppException,
+    ForbiddenRoleException,
     InvalidTokenException,
     UserNotFoundException,
 )
@@ -62,4 +63,19 @@ def get_current_user(
         )
 
     return user
+
+
+def require_provider_role(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    Ensure the authenticated user has a provider role (PROVIDER or COACH).
+    Raises 403 Forbidden if the user is not a provider.
+    """
+    role = (current_user.role or "").strip().upper()
+    if role not in ["PROVIDER", "COACH"]:
+        raise ForbiddenRoleException()
+
+    return current_user
+
 

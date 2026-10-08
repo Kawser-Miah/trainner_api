@@ -6,35 +6,11 @@ from sqlalchemy.orm import Session
 
 from src.models.accounts.user import User
 from src.schemas.auth.me import UserProfileResponse
+from src.utils.media import build_media_url, get_base_url
 
+# Alias build_image_url to centralized build_media_url for backward compatibility
+build_image_url = build_media_url
 
-def get_base_url(request: Request | None) -> str:
-    if request is None:
-        return ""
-    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
-    host = request.headers.get("x-forwarded-host", request.headers.get("host"))
-    if host:
-        return f"{proto}://{host}".rstrip("/")
-    return str(request.base_url).rstrip("/")
-
-
-def build_image_url(photo_url: str | None, request: Request | None = None) -> str | None:
-    if not photo_url:
-        return None
-
-    base_url = get_base_url(request)
-    if not base_url:
-        return photo_url
-
-    if "/media/profile_images/" in photo_url:
-        filename = photo_url.split("/media/profile_images/", 1)[1]
-        return f"{base_url}/media/profile_images/{filename}"
-
-    if photo_url.startswith("http://") or photo_url.startswith("https://"):
-        return photo_url
-
-    clean_path = photo_url.lstrip("/")
-    return f"{base_url}/{clean_path}"
 
 
 def get_user_profile(user: User, request: Request | None = None) -> UserProfileResponse:
