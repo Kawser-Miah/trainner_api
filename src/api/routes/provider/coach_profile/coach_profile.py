@@ -6,7 +6,7 @@ from src.core.config import settings
 from src.core.database import get_db
 from src.core.dependencies import require_provider_role
 from src.models.accounts.user import User
-from src.service.provider.coach_profile_service import (
+from src.service.provider.coach_profile import (
     create_provider_coach_profile,
     get_provider_coach_profile,
     update_provider_coach_profile,

@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.core.common_responses import CommonResponse
+
 
 class CoachUserSummaryResponse(BaseModel):
     id: int
@@ -77,7 +79,4 @@ class CoachProfileDataResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-from src.core.common_responses import CommonResponse
-
 CoachProfileResponse = CommonResponse
-

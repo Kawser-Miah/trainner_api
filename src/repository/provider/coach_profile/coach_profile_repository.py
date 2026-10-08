@@ -3,9 +3,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from src.models.provider.category import Category
-from src.models.provider.certification import CoachCertification
-from src.models.provider.coach_profile import CoachProfile
-from src.models.provider.qualification import CoachQualification
+from src.models.provider.coach_profile import (
+    CoachCertification,
+    CoachProfile,
+    CoachQualification,
+)
 
 
 def get_coach_profile_by_user_id(
