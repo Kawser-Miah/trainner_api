@@ -174,7 +174,7 @@ def to_profile_data_response(
     return CoachProfileDataResponse(
         id=profile.id,
         user=user_summary,
-        profile_photo=build_media_url(profile.profile_photo, request),
+        profile_photo=build_media_url(user.photo_url, request),
         headline=profile.headline,
         about=profile.about,
         categories=categories_resp,
@@ -373,12 +373,14 @@ async def create_provider_coach_profile(
     headline = parsed["headline"] or getattr(user, "full_name", "") or "Coach"
     about = parsed["about"] or ""
 
+    if parsed["profile_photo_path"] is not None:
+        user.photo_url = parsed["profile_photo_path"]
+
     profile = create_coach_profile(
         db=db,
         user_id=user.id,
         headline=headline,
         about=about,
-        profile_photo=parsed["profile_photo_path"],
         introduction_video=parsed["intro_video_path"],
         introduction_video_duration=duration,
         video_duration=duration,
@@ -435,7 +437,7 @@ async def update_provider_coach_profile(
         profile.linkedin_url = parsed["linkedin_url"]
 
     if parsed["profile_photo_path"] is not None:
-        profile.profile_photo = parsed["profile_photo_path"]
+        user.photo_url = parsed["profile_photo_path"]
 
     if parsed["intro_video_path"] is not None:
         profile.introduction_video = parsed["intro_video_path"]

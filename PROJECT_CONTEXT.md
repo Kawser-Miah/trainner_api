@@ -116,7 +116,7 @@ D:\backend\coach/
 
 ### 4.3. Provider Tables (`categories`, `coach_profiles`, etc.)
 - **`categories`**: `id` (PK), `name` (unique, indexed), `description`, `is_active`, `image`, timestamps.
-- **`coach_profiles`**: `id` (PK), `user_id` (FK `users.id`, UNIQUE), `headline`, `about`, `profile_photo`, `introduction_video`, `introduction_video_duration`, `introduction_video_thumbnail`, `linkedin_url`, `affiliate_commission_percent`, `auto_approve_affiliates`, `expertises` (JSON), `languages` (JSON), `is_completed`, `status` ('pending'), `rejection_reason`, `avg_rating`, `total_reviews`, `completed_sessions_count`, `success_rate`, timestamps.
+- **`coach_profiles`**: `id` (PK), `user_id` (FK `users.id`, UNIQUE), `headline`, `about`, `introduction_video`, `introduction_video_duration`, `introduction_video_thumbnail`, `linkedin_url`, `affiliate_commission_percent`, `auto_approve_affiliates`, `expertises` (JSON), `languages` (JSON), `is_completed`, `status` ('pending'), `rejection_reason`, `avg_rating`, `total_reviews`, `completed_sessions_count`, `success_rate`, timestamps.
 - **`coach_profile_categories`**: `id` (PK), `coach_profile_id` (FK), `category_id` (FK).
 - **`coach_certifications`**: `id` (PK), `coach_profile_id` (FK), `name`, `document`, `created_at`.
 - **`coach_qualifications`**: `id` (PK), `coach_profile_id` (FK), `name`, `document`, `created_at`.
