@@ -29,7 +29,7 @@ from src.schemas.provider.coach_profile import (
     CoachQualificationResponse,
     CoachUserSummaryResponse,
 )
-from src.utils.media import build_media_url
+from src.utils.media import build_media_url, delete_media_file
 from src.utils.video import extract_video_duration, format_duration
 
 
@@ -419,12 +419,21 @@ async def update_provider_coach_profile(
         profile.linkedin_url = parsed["linkedin_url"]
 
     if parsed["profile_photo_path"] is not None:
+        if user.photo_url and user.photo_url != parsed["profile_photo_path"]:
+            delete_media_file(user.photo_url)
         user.photo_url = parsed["profile_photo_path"]
 
     if parsed["intro_video_path"] is not None:
+        if profile.introduction_video and profile.introduction_video != parsed["intro_video_path"]:
+            delete_media_file(profile.introduction_video)
         profile.introduction_video = parsed["intro_video_path"]
 
     if parsed["intro_thumb_path"] is not None:
+        if (
+            profile.introduction_video_thumbnail
+            and profile.introduction_video_thumbnail != parsed["intro_thumb_path"]
+        ):
+            delete_media_file(profile.introduction_video_thumbnail)
         profile.introduction_video_thumbnail = parsed["intro_thumb_path"]
 
     if parsed["introduction_video_duration"] is not None and parsed["introduction_video_duration"] > 0:

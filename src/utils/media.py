@@ -1,3 +1,4 @@
+from pathlib import Path
 from fastapi import Request
 
 
@@ -35,3 +36,26 @@ def build_media_url(file_path: str | None, request: Request | None = None) -> st
 
     clean_path = file_path.lstrip("/")
     return f"{base_url}/{clean_path}"
+
+
+def delete_media_file(file_path: str | None) -> bool:
+    """
+    Safely delete an existing local media file from disk when it is replaced or removed.
+    """
+    if not file_path:
+        return False
+
+    if file_path.startswith("http://") or file_path.startswith("https://"):
+        return False
+
+    clean_path = file_path.lstrip("/")
+    target_path = Path(clean_path)
+
+    try:
+        if target_path.is_file() and target_path.exists():
+            target_path.unlink()
+            return True
+    except Exception:
+        pass
+
+    return False

@@ -8,6 +8,7 @@ from src.models.provider.coach_profile import (
     CoachProfile,
     CoachQualification,
 )
+from src.utils.media import delete_media_file
 
 
 def get_coach_profile_by_user_id(
@@ -80,6 +81,11 @@ def replace_certifications(
     coach_profile: CoachProfile,
     certifications_data: list[dict[str, Any]],
 ) -> None:
+    # Delete old certification documents from disk
+    for old_cert in coach_profile.certifications:
+        if old_cert.document:
+            delete_media_file(old_cert.document)
+
     # Clear existing certifications
     coach_profile.certifications.clear()
     db.flush()
@@ -103,6 +109,11 @@ def replace_qualifications(
     coach_profile: CoachProfile,
     qualifications_data: list[dict[str, Any]],
 ) -> None:
+    # Delete old qualification documents from disk
+    for old_qual in coach_profile.qualifications:
+        if old_qual.document:
+            delete_media_file(old_qual.document)
+
     # Clear existing qualifications
     coach_profile.qualifications.clear()
     db.flush()
