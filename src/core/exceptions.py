@@ -76,6 +76,18 @@ class InvalidCredentialsException(AppException):
         )
 
 
+class EmailNotVerifiedException(AppException):
+    def __init__(
+        self,
+        message: str = "Your email address is not verified. Please verify your email before accessing this service.",
+    ):
+        super().__init__(
+            error="EMAIL_NOT_VERIFIED",
+            message=message,
+            status=403,
+        )
+
+
 class InvalidOldPasswordException(AppException):
     def __init__(
         self,
@@ -122,4 +134,4 @@ class CoachProfileNotFoundException(AppException):
             message=message,
             status=404,
         )
-
+

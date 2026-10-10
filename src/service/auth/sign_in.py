@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
 
-from src.core.exceptions import InvalidCredentialsException
+from src.core.exceptions import (
+    EmailNotVerifiedException,
+    InvalidCredentialsException,
+)
 from src.repository.auth.user_repository import get_user_by_email
 from src.schemas.auth.email_verify import VerifyEmailResponse
 from src.utils.jwt import (
@@ -33,9 +36,7 @@ async def sign_in(
 
     # Check email verification
     if not user.is_email_verified:
-        raise InvalidCredentialsException(
-            message="Please verify your email before signing in.",
-        )
+        raise EmailNotVerifiedException()
 
     # Check account status
     if not user.is_active:
