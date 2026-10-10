@@ -16,7 +16,7 @@ from src.api.routes.auth import (
 )
 
 
-from src.api.routes.provider.coach_profile import router as provider_coach_profile_router
+from src.api.routes.provider.coach_profile import(coach_profile, coach_availability)
 
 
 api_router = APIRouter()
@@ -34,5 +34,7 @@ api_router.include_router(logout.router, prefix=settings.authentication_prefix)
 api_router.include_router(delete_account.router, prefix=settings.authentication_prefix)
 
 # Provider endpoints
-api_router.include_router(provider_coach_profile_router, prefix=settings.provider_prefix)
-api_router.include_router(provider_coach_profile_router, prefix=settings.provider_prefix.lower(), include_in_schema=False)
+api_router.include_router(coach_profile.router, prefix=settings.provider_prefix)
+api_router.include_router(coach_profile.router, prefix=settings.provider_prefix.lower(), include_in_schema=False)
+api_router.include_router(coach_availability.router, prefix=settings.provider_prefix)
+api_router.include_router(coach_availability.router, prefix=settings.provider_prefix.lower(), include_in_schema=False)

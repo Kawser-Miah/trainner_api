@@ -48,6 +48,7 @@ def build_postman_collection():
     delete_account_url = build_url_dict(f"{auth_prefix}{settings.delete_account_prefix}")
 
     provider_profile_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_profile_prefix}")
+    provider_availability_url = build_url_dict(f"{settings.provider_prefix}/availability")
 
     collection = {
         "info": {
@@ -718,6 +719,144 @@ def build_postman_collection():
                             },
                             "url": provider_profile_url,
                         },
+                    },
+                    {
+                        "name": "Get Coach Availability",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": provider_availability_url,
+                        },
+                        "response": make_response_example(
+                            "Get Availability Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Coach availability retrieved successfully.",
+                                "data": {
+                                    "has_availability": True,
+                                    "weekly": [
+                                        {
+                                            "weekday": 0,
+                                            "weekday_display": "Monday",
+                                            "start_time": "09:00",
+                                            "end_time": "17:00",
+                                        },
+                                        {
+                                            "weekday": 2,
+                                            "weekday_display": "Wednesday",
+                                            "start_time": "10:00",
+                                            "end_time": "14:00",
+                                        },
+                                    ],
+                                    "on_call": [
+                                        {
+                                            "weekday": 0,
+                                            "weekday_display": "Monday",
+                                            "start_time": "17:00",
+                                            "end_time": "21:00",
+                                        }
+                                    ],
+                                    "on_call_enabled": True,
+                                    "time_off": [
+                                        {
+                                            "date": "2026-10-16",
+                                            "reason": "Holiday",
+                                        }
+                                    ],
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Update Coach Availability",
+                        "request": {
+                            "method": "PUT",
+                            "header": [
+                                {"key": "Authorization", "value": "Bearer {{access_token}}"},
+                                {"key": "Content-Type", "value": "application/json"},
+                            ],
+                            "body": {
+                                "mode": "raw",
+                                "raw": json.dumps(
+                                    {
+                                        "weekly": [
+                                            {
+                                                "weekday": 0,
+                                                "weekday_display": "Monday",
+                                                "start_time": "09:00",
+                                                "end_time": "17:00",
+                                            },
+                                            {
+                                                "weekday": 2,
+                                                "weekday_display": "Wednesday",
+                                                "start_time": "10:00",
+                                                "end_time": "14:00",
+                                            },
+                                        ],
+                                        "on_call": [
+                                            {
+                                                "weekday": 0,
+                                                "weekday_display": "Monday",
+                                                "start_time": "17:00",
+                                                "end_time": "21:00",
+                                            }
+                                        ],
+                                        "on_call_enabled": True,
+                                        "time_off": [
+                                            {
+                                                "date": "2026-10-16",
+                                                "reason": "Holiday",
+                                            }
+                                        ],
+                                    },
+                                    indent=2,
+                                ),
+                            },
+                            "url": provider_availability_url,
+                        },
+                        "response": make_response_example(
+                            "Update Availability Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Availability updated successfully.",
+                                "data": {
+                                    "has_availability": True,
+                                    "weekly": [
+                                        {
+                                            "weekday": 0,
+                                            "weekday_display": "Monday",
+                                            "start_time": "09:00",
+                                            "end_time": "17:00",
+                                        },
+                                        {
+                                            "weekday": 2,
+                                            "weekday_display": "Wednesday",
+                                            "start_time": "10:00",
+                                            "end_time": "14:00",
+                                        },
+                                    ],
+                                    "on_call": [
+                                        {
+                                            "weekday": 0,
+                                            "weekday_display": "Monday",
+                                            "start_time": "17:00",
+                                            "end_time": "21:00",
+                                        }
+                                    ],
+                                    "on_call_enabled": True,
+                                    "time_off": [
+                                        {
+                                            "date": "2026-10-16",
+                                            "reason": "Holiday",
+                                        }
+                                    ],
+                                },
+                            },
+                        ),
                     },
                 ],
             },

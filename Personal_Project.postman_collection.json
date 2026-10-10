@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "702b3988-008c-41a1-abc0-586b24807f6a",
+    "_postman_id": "f0aedda5-9a8a-4b71-93e0-8ac47b24363a",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -829,6 +829,94 @@
               ]
             }
           }
+        },
+        {
+          "name": "Get Coach Availability",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/Provider/availability",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "Provider",
+                "availability"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Availability Success Example",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Coach availability retrieved successfully.\",\n  \"data\": {\n    \"has_availability\": true,\n    \"weekly\": [\n      {\n        \"weekday\": 0,\n        \"weekday_display\": \"Monday\",\n        \"start_time\": \"09:00\",\n        \"end_time\": \"17:00\"\n      },\n      {\n        \"weekday\": 2,\n        \"weekday_display\": \"Wednesday\",\n        \"start_time\": \"10:00\",\n        \"end_time\": \"14:00\"\n      }\n    ],\n    \"on_call\": [\n      {\n        \"weekday\": 0,\n        \"weekday_display\": \"Monday\",\n        \"start_time\": \"17:00\",\n        \"end_time\": \"21:00\"\n      }\n    ],\n    \"on_call_enabled\": true,\n    \"time_off\": [\n      {\n        \"date\": \"2026-10-16\",\n        \"reason\": \"Holiday\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Coach Availability",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weekly\": [\n    {\n      \"weekday\": 0,\n      \"weekday_display\": \"Monday\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"17:00\"\n    },\n    {\n      \"weekday\": 2,\n      \"weekday_display\": \"Wednesday\",\n      \"start_time\": \"10:00\",\n      \"end_time\": \"14:00\"\n    }\n  ],\n  \"on_call\": [\n    {\n      \"weekday\": 0,\n      \"weekday_display\": \"Monday\",\n      \"start_time\": \"17:00\",\n      \"end_time\": \"21:00\"\n    }\n  ],\n  \"on_call_enabled\": true,\n  \"time_off\": [\n    {\n      \"date\": \"2026-10-16\",\n      \"reason\": \"Holiday\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/Provider/availability",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "Provider",
+                "availability"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Update Availability Success Example",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Availability updated successfully.\",\n  \"data\": {\n    \"has_availability\": true,\n    \"weekly\": [\n      {\n        \"weekday\": 0,\n        \"weekday_display\": \"Monday\",\n        \"start_time\": \"09:00\",\n        \"end_time\": \"17:00\"\n      },\n      {\n        \"weekday\": 2,\n        \"weekday_display\": \"Wednesday\",\n        \"start_time\": \"10:00\",\n        \"end_time\": \"14:00\"\n      }\n    ],\n    \"on_call\": [\n      {\n        \"weekday\": 0,\n        \"weekday_display\": \"Monday\",\n        \"start_time\": \"17:00\",\n        \"end_time\": \"21:00\"\n      }\n    ],\n    \"on_call_enabled\": true,\n    \"time_off\": [\n      {\n        \"date\": \"2026-10-16\",\n        \"reason\": \"Holiday\"\n      }\n    ]\n  }\n}"
+            }
+          ]
         }
       ]
     }

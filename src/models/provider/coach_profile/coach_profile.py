@@ -154,3 +154,10 @@ class CoachProfile(Base):
         back_populates="coach_profile",
         cascade="all, delete-orphan",
     )
+
+    availability = relationship(
+        "CoachAvailability",
+        back_populates="coach_profile",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

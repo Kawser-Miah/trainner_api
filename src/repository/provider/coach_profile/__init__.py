@@ -1,3 +1,7 @@
+from src.repository.provider.coach_profile.coach_availability_repository import (
+    create_or_update_coach_availability,
+    get_coach_availability_by_profile_id,
+)
 from src.repository.provider.coach_profile.coach_profile_repository import (
     create_coach_profile,
     get_coach_profile_by_user_id,
@@ -12,4 +16,6 @@ __all__ = [
     "set_coach_categories",
     "replace_certifications",
     "replace_qualifications",
+    "get_coach_availability_by_profile_id",
+    "create_or_update_coach_availability",
 ]

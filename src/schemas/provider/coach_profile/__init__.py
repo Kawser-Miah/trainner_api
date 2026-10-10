@@ -1,3 +1,10 @@
+from src.schemas.provider.coach_profile.coach_availability import (
+    AvailabilityTimeOffItem,
+    AvailabilityTimeSlotItem,
+    CoachAvailabilityDataResponse,
+    CoachAvailabilityResponse,
+    UpdateCoachAvailabilityRequest,
+)
 from src.schemas.provider.coach_profile.coach_profile import (
     CoachCategoryResponse,
     CoachCertificationResponse,
@@ -14,4 +21,9 @@ __all__ = [
     "CoachQualificationResponse",
     "CoachProfileDataResponse",
     "CoachProfileResponse",
+    "AvailabilityTimeSlotItem",
+    "AvailabilityTimeOffItem",
+    "UpdateCoachAvailabilityRequest",
+    "CoachAvailabilityDataResponse",
+    "CoachAvailabilityResponse",
 ]

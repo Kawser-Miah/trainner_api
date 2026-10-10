@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     delete_account_prefix: str = "/delete-account"
     provider_prefix: str = "/Provider"
     coach_profile_prefix: str = "/coach-profile"
+    coach_availability_prefix: str = "/coach-availability"
 
 
 
