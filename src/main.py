@@ -54,7 +54,7 @@ async def app_exception_handler(
     return JSONResponse(
         status_code=exc.status,
         content=ErrorResponse(
-            code=exc.status,
+            status=exc.status,
             message=exc.message,
             error=exc.error,
             data=exc.data,
