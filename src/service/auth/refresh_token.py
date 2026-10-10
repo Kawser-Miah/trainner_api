@@ -1,13 +1,16 @@
+from sqlalchemy.orm import Session
+
 from src.core.exceptions import UserNotFoundException
-from src.data.users import users
+from src.repository.auth.user_repository import get_user_by_id
 from src.schemas.auth.refresh_token import RefreshTokenResponse
 from src.utils.jwt import (
-    verify_refresh_token,
     create_access_token,
+    verify_refresh_token,
 )
 
 
 async def refresh_access_token(
+    db: Session,
     refresh_token: str,
 ):
     # Verify refresh token
@@ -16,25 +19,21 @@ async def refresh_access_token(
     user_id = payload.get("sub")
     database_user_id = int(user_id)
 
-    # Find user
-    user = None
-
-    for item in users:
-        if item["id"] == database_user_id:
-            user = item
-            break
+    # Find user in database
+    user = get_user_by_id(db, user_id=database_user_id)
 
     if user is None:
         raise UserNotFoundException()
 
     # Create new access token
     access_token, access_token_valid_till = create_access_token(
-        user_id=user["id"],
-        role=user["role"],
-        full_name=user["full_name"],
+        user_id=user.id,
+        role=user.role,
+        full_name=user.full_name,
     )
 
     return RefreshTokenResponse(
         access_token=access_token,
         access_token_valid_till=access_token_valid_till,
+        refresh_token=refresh_token,
     )

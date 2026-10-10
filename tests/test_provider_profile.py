@@ -145,3 +145,21 @@ def test_create_and_fetch_profile_with_only_introvideo(test_coach_user, db_sessi
     assert patch_text_data["headline"] == "Updated Master Coach"
     assert patch_text_data["introduction_video_duration"] == 45
     assert patch_text_data["introduction_video_duration_display"] == "0:45"
+
+
+def test_refresh_token_with_db_user(test_coach_user):
+    from src.utils.jwt import create_refresh_token
+
+    client = TestClient(app)
+    refresh_token_str = create_refresh_token(user_id=test_coach_user.id)
+
+    response = client.post(
+        "/api/auth/refresh-token/",
+        json={"refresh_token": refresh_token_str},
+    )
+
+    assert response.status_code == 200, response.text
+    res_data = response.json()
+    assert res_data["success"] is True
+    assert "access_token" in res_data["data"]
+    assert res_data["data"]["access_token"] is not None
