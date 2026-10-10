@@ -46,6 +46,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+
 @app.exception_handler(AppException)
 async def app_exception_handler(
     request: Request,
@@ -58,6 +61,31 @@ async def app_exception_handler(
             message=exc.message,
             error=exc.error,
             data=exc.data,
+        ).model_dump(exclude_none=True),
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(
+    request: Request,
+    exc: StarletteHTTPException,
+):
+    if exc.status_code == 404:
+        error_code = "NOT_FOUND"
+        message = "The requested API endpoint was not found."
+    elif exc.status_code == 405:
+        error_code = "METHOD_NOT_ALLOWED"
+        message = "The HTTP method is not allowed for this endpoint."
+    else:
+        error_code = "HTTP_ERROR"
+        message = exc.detail if isinstance(exc.detail, str) else "An HTTP error occurred."
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(
+            status=exc.status_code,
+            message=message,
+            error=error_code,
         ).model_dump(exclude_none=True),
     )
 
