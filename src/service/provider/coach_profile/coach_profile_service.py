@@ -199,6 +199,9 @@ async def parse_coach_form_data(request: Request) -> dict[str, Any]:
     form = await request.form()
 
     # Extract single text fields
+    full_name = form.get("full_name") or form.get("name")
+    phone = form.get("phone") or form.get("phone_number")
+    address = form.get("address")
     about = form.get("about")
     headline = form.get("headline")
     linkedin_url = form.get("linkedin_url")
@@ -305,6 +308,9 @@ async def parse_coach_form_data(request: Request) -> dict[str, Any]:
     video_display_duration = format_duration(video_duration)
 
     return {
+        "full_name": str(full_name).strip() if full_name is not None and str(full_name).strip() else None,
+        "phone": str(phone).strip() if phone is not None and str(phone).strip() else None,
+        "address": str(address).strip() if address is not None and str(address).strip() else None,
         "about": str(about) if about is not None else None,
         "headline": str(headline) if headline is not None else None,
         "linkedin_url": str(linkedin_url) if linkedin_url is not None else None,
@@ -410,6 +416,15 @@ async def update_provider_coach_profile(
         return await create_provider_coach_profile(db=db, user=user, request=request)
 
     parsed = await parse_coach_form_data(request)
+
+    if parsed["full_name"] is not None:
+        user.full_name = parsed["full_name"]
+
+    if parsed["phone"] is not None:
+        user.phone = parsed["phone"]
+
+    if parsed["address"] is not None:
+        user.address = parsed["address"]
 
     if parsed["about"] is not None:
         profile.about = parsed["about"]
