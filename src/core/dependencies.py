@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from src.core.database import get_db
 from src.core.exceptions import (
     AppException,
+    CoachNotApprovedException,
     ForbiddenRoleException,
     InvalidTokenException,
     UserNotFoundException,
@@ -75,6 +76,22 @@ def require_provider_role(
     role = (current_user.role or "").strip().upper()
     if role not in ["PROVIDER", "COACH"]:
         raise ForbiddenRoleException()
+
+    return current_user
+
+
+def require_approved_coach(
+    current_user: User = Depends(require_provider_role),
+) -> User:
+    """
+    Ensure the authenticated provider has an approved coach status.
+    Raises 403 Forbidden if coach_status is not 'approved'.
+    """
+    status = (current_user.coach_status or "").strip().lower()
+    if status != "approved":
+        raise CoachNotApprovedException(
+            coach_status=current_user.coach_status or "pending",
+        )
 
     return current_user
 

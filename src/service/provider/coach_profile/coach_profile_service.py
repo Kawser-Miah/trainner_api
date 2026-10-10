@@ -389,6 +389,8 @@ async def create_provider_coach_profile(
 
     # Sync user flags
     user.is_completed = True
+    if not user.coach_status:
+        user.coach_status = "pending"
     if (user.role or "").strip().upper() not in ["PROVIDER", "COACH"]:
         user.role = "PROVIDER"
 
@@ -465,6 +467,8 @@ async def update_provider_coach_profile(
         )
 
     user.is_completed = True
+    if not user.coach_status:
+        user.coach_status = "pending"
     if (user.role or "").strip().upper() not in ["PROVIDER", "COACH"]:
         user.role = "COACH"
 

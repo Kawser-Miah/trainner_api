@@ -53,6 +53,12 @@ class User(Base):
         default="USER",
     )
 
+    coach_status: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        default=None,
+    )
+
     is_email_verified: Mapped[bool] = mapped_column(
         Boolean,
         default=False,

@@ -93,6 +93,23 @@ class EmailNotVerifiedException(AppException):
         )
 
 
+class CoachNotApprovedException(AppException):
+    def __init__(
+        self,
+        coach_status: str = "pending",
+        message: str | None = None,
+    ):
+        status_str = (coach_status or "pending").strip().lower()
+        if not message:
+            message = f"Access denied. Your coach profile status is '{status_str}'. Only approved coaches can access this service."
+        super().__init__(
+            error="COACH_NOT_APPROVED",
+            message=message,
+            status=403,
+            data={"coach_status": status_str},
+        )
+
+
 class InvalidOldPasswordException(AppException):
     def __init__(
         self,
