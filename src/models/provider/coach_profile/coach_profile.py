@@ -161,3 +161,9 @@ class CoachProfile(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+
+    reviews = relationship(
+        "CoachReview",
+        back_populates="coach_profile",
+        cascade="all, delete-orphan",
+    )

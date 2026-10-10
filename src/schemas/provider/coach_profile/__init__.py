@@ -13,6 +13,11 @@ from src.schemas.provider.coach_profile.coach_profile import (
     CoachQualificationResponse,
     CoachUserSummaryResponse,
 )
+from src.schemas.provider.coach_profile.coach_review import (
+    CoachReviewItemResponse,
+    CoachReviewsDataResponse,
+    CoachReviewsResponse,
+)
 
 __all__ = [
     "CoachUserSummaryResponse",
@@ -26,4 +31,7 @@ __all__ = [
     "UpdateCoachAvailabilityRequest",
     "CoachAvailabilityDataResponse",
     "CoachAvailabilityResponse",
+    "CoachReviewItemResponse",
+    "CoachReviewsDataResponse",
+    "CoachReviewsResponse",
 ]

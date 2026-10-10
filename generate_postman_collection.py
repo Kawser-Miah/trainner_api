@@ -48,7 +48,8 @@ def build_postman_collection():
     delete_account_url = build_url_dict(f"{auth_prefix}{settings.delete_account_prefix}")
 
     provider_profile_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_profile_prefix}")
-    provider_availability_url = build_url_dict(f"{settings.provider_prefix}/availability")
+    provider_availability_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_availability_prefix}")
+    provider_reviews_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_reviews_prefix}")
 
     collection = {
         "info": {
@@ -852,6 +853,44 @@ def build_postman_collection():
                                         {
                                             "date": "2026-10-16",
                                             "reason": "Holiday",
+                                        }
+                                    ],
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Get Coach Reviews",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": provider_reviews_url,
+                        },
+                        "response": make_response_example(
+                            "Get Reviews Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Reviews retrieved successfully.",
+                                "data": {
+                                    "avg_rating": 5.0,
+                                    "total_reviews": 1,
+                                    "rating_breakdown": {
+                                        "5": 1,
+                                        "4": 0,
+                                        "3": 0,
+                                        "2": 0,
+                                        "1": 0,
+                                    },
+                                    "reviews": [
+                                        {
+                                            "id": 1,
+                                            "user_name": "Jane Buyer",
+                                            "user_image": None,
+                                            "rating": 5,
+                                            "review": "Brilliant session, very practical.",
+                                            "created_at": "2026-09-30T05:36:45.966655Z",
                                         }
                                     ],
                                 },

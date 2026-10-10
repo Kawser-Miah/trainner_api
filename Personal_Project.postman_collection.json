@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "f0aedda5-9a8a-4b71-93e0-8ac47b24363a",
+    "_postman_id": "7ffd75f3-4e4f-4016-a822-5184baae2127",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -841,14 +841,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/api/Provider/availability",
+              "raw": "{{base_url}}/api/Provider/coach-availability",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "Provider",
-                "availability"
+                "coach-availability"
               ]
             }
           },
@@ -889,14 +889,14 @@
               "raw": "{\n  \"weekly\": [\n    {\n      \"weekday\": 0,\n      \"weekday_display\": \"Monday\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"17:00\"\n    },\n    {\n      \"weekday\": 2,\n      \"weekday_display\": \"Wednesday\",\n      \"start_time\": \"10:00\",\n      \"end_time\": \"14:00\"\n    }\n  ],\n  \"on_call\": [\n    {\n      \"weekday\": 0,\n      \"weekday_display\": \"Monday\",\n      \"start_time\": \"17:00\",\n      \"end_time\": \"21:00\"\n    }\n  ],\n  \"on_call_enabled\": true,\n  \"time_off\": [\n    {\n      \"date\": \"2026-10-16\",\n      \"reason\": \"Holiday\"\n    }\n  ]\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/Provider/availability",
+              "raw": "{{base_url}}/api/Provider/coach-availability",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "Provider",
-                "availability"
+                "coach-availability"
               ]
             }
           },
@@ -915,6 +915,46 @@
               ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Availability updated successfully.\",\n  \"data\": {\n    \"has_availability\": true,\n    \"weekly\": [\n      {\n        \"weekday\": 0,\n        \"weekday_display\": \"Monday\",\n        \"start_time\": \"09:00\",\n        \"end_time\": \"17:00\"\n      },\n      {\n        \"weekday\": 2,\n        \"weekday_display\": \"Wednesday\",\n        \"start_time\": \"10:00\",\n        \"end_time\": \"14:00\"\n      }\n    ],\n    \"on_call\": [\n      {\n        \"weekday\": 0,\n        \"weekday_display\": \"Monday\",\n        \"start_time\": \"17:00\",\n        \"end_time\": \"21:00\"\n      }\n    ],\n    \"on_call_enabled\": true,\n    \"time_off\": [\n      {\n        \"date\": \"2026-10-16\",\n        \"reason\": \"Holiday\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Coach Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/Provider/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "Provider",
+                "reviews"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Reviews Success Example",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Reviews retrieved successfully.\",\n  \"data\": {\n    \"avg_rating\": 5.0,\n    \"total_reviews\": 1,\n    \"rating_breakdown\": {\n      \"5\": 1,\n      \"4\": 0,\n      \"3\": 0,\n      \"2\": 0,\n      \"1\": 0\n    },\n    \"reviews\": [\n      {\n        \"id\": 1,\n        \"user_name\": \"Jane Buyer\",\n        \"user_image\": null,\n        \"rating\": 5,\n        \"review\": \"Brilliant session, very practical.\",\n        \"created_at\": \"2026-09-30T05:36:45.966655Z\"\n      }\n    ]\n  }\n}"
             }
           ]
         }

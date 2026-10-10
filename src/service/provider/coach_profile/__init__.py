@@ -7,6 +7,9 @@ from src.service.provider.coach_profile.coach_profile_service import (
     get_provider_coach_profile,
     update_provider_coach_profile,
 )
+from src.service.provider.coach_profile.coach_review_service import (
+    get_provider_coach_reviews,
+)
 
 __all__ = [
     "get_provider_coach_profile",
@@ -14,4 +17,5 @@ __all__ = [
     "update_provider_coach_profile",
     "get_provider_coach_availability",
     "update_provider_coach_availability",
+    "get_provider_coach_reviews",
 ]

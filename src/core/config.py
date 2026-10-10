@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     provider_prefix: str = "/Provider"
     coach_profile_prefix: str = "/coach-profile"
     coach_availability_prefix: str = "/coach-availability"
+    coach_reviews_prefix: str = "/reviews"
 
 
 

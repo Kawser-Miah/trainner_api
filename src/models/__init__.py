@@ -6,6 +6,7 @@ from src.models.provider.coach_profile import (
     CoachCertification,
     CoachProfile,
     CoachQualification,
+    CoachReview,
 )
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "CoachProfileCategory",
     "CoachProfile",
     "CoachAvailability",
+    "CoachReview",
     "CoachCertification",
     "CoachQualification",
 ]
