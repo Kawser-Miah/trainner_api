@@ -94,8 +94,6 @@ def test_create_and_fetch_profile_with_only_introvideo(test_coach_user, db_sessi
     profile_data = res_data["data"]
 
     # Check that video duration and video display duration were computed and returned
-    assert profile_data["video_duration"] == 85
-    assert profile_data["video_display_duration"] == "1:25"
     assert profile_data["introduction_video_duration"] == 85
     assert profile_data["introduction_video_duration_display"] == "1:25"
     assert profile_data["introduction_video"] is not None
@@ -106,17 +104,14 @@ def test_create_and_fetch_profile_with_only_introvideo(test_coach_user, db_sessi
         select(CoachProfile).where(CoachProfile.user_id == test_coach_user.id)
     ).scalar_one()
 
-    assert saved_profile.video_duration == 85
-    assert saved_profile.video_display_duration == "1:25"
     assert saved_profile.introduction_video_duration == 85
 
     # 3. Fetch from database using GET /api/Provider/coach-profile
     get_res = client.get("/api/Provider/coach-profile", headers=headers)
     assert get_res.status_code == 200
     get_data = get_res.json()["data"]
-    assert get_data["video_duration"] == 85
-    assert get_data["video_display_duration"] == "1:25"
-    assert get_data["video_duration_display"] == "1:25"
+    assert get_data["introduction_video_duration"] == 85
+    assert get_data["introduction_video_duration_display"] == "1:25"
 
     # 4. Update with a new 45-second video (0:45)
     new_video_bytes = create_sample_mp4(45)
@@ -129,16 +124,15 @@ def test_create_and_fetch_profile_with_only_introvideo(test_coach_user, db_sessi
     )
     assert patch_res.status_code == 200
     patch_data = patch_res.json()["data"]
-    assert patch_data["video_duration"] == 45
-    assert patch_data["video_display_duration"] == "0:45"
+    assert patch_data["introduction_video_duration"] == 45
+    assert patch_data["introduction_video_duration_display"] == "0:45"
 
     # 5. Check in the database that updated values are stored
     db_session.expire_all()
     updated_profile = db_session.execute(
         select(CoachProfile).where(CoachProfile.user_id == test_coach_user.id)
     ).scalar_one()
-    assert updated_profile.video_duration == 45
-    assert updated_profile.video_display_duration == "0:45"
+    assert updated_profile.introduction_video_duration == 45
 
     # 6. Update only text fields without re-uploading video - duration must remain intact
     patch_text_res = client.patch(
@@ -149,5 +143,5 @@ def test_create_and_fetch_profile_with_only_introvideo(test_coach_user, db_sessi
     assert patch_text_res.status_code == 200
     patch_text_data = patch_text_res.json()["data"]
     assert patch_text_data["headline"] == "Updated Master Coach"
-    assert patch_text_data["video_duration"] == 45
-    assert patch_text_data["video_display_duration"] == "0:45"
+    assert patch_text_data["introduction_video_duration"] == 45
+    assert patch_text_data["introduction_video_duration_display"] == "0:45"

@@ -158,16 +158,8 @@ def to_profile_data_response(
         address=getattr(user, "address", None),
     )
 
-    duration = (
-        profile.video_duration
-        if profile.video_duration is not None and profile.video_duration > 0
-        else (profile.introduction_video_duration or 0)
-    )
-    display_duration = (
-        profile.video_display_duration
-        if profile.video_display_duration and profile.video_display_duration != "0:00"
-        else format_duration(duration)
-    )
+    duration = profile.introduction_video_duration or 0
+    display_duration = format_duration(duration)
 
     intro_video_url = build_media_url(profile.introduction_video, request)
 
@@ -181,13 +173,8 @@ def to_profile_data_response(
         certifications=certifications_resp,
         qualifications=qualifications_resp,
         introduction_video=intro_video_url,
-        intro_video=intro_video_url,
-        introvideo=intro_video_url,
         introduction_video_duration=duration,
         introduction_video_duration_display=display_duration,
-        video_duration=duration,
-        video_display_duration=display_duration,
-        video_duration_display=display_duration,
         introduction_video_thumbnail=build_media_url(
             profile.introduction_video_thumbnail, request
         ),
@@ -322,8 +309,6 @@ async def parse_coach_form_data(request: Request) -> dict[str, Any]:
         "headline": str(headline) if headline is not None else None,
         "linkedin_url": str(linkedin_url) if linkedin_url is not None else None,
         "introduction_video_duration": video_duration,
-        "video_duration": video_duration,
-        "video_display_duration": video_display_duration,
         "profile_photo_path": profile_photo_path,
         "intro_video_path": intro_video_path,
         "intro_thumb_path": intro_thumb_path,
@@ -367,8 +352,7 @@ async def create_provider_coach_profile(
     if not categories:
         categories = get_or_create_default_categories(db)[:1]
 
-    duration = parsed["video_duration"] or 0
-    display_duration = parsed["video_display_duration"] or format_duration(duration)
+    duration = parsed["introduction_video_duration"] or 0
 
     headline = parsed["headline"] or getattr(user, "full_name", "") or "Coach"
     about = parsed["about"] or ""
@@ -383,8 +367,6 @@ async def create_provider_coach_profile(
         about=about,
         introduction_video=parsed["intro_video_path"],
         introduction_video_duration=duration,
-        video_duration=duration,
-        video_display_duration=display_duration,
         introduction_video_thumbnail=parsed["intro_thumb_path"],
         linkedin_url=parsed["linkedin_url"],
         expertises=parsed["expertises"] or [],
@@ -445,16 +427,12 @@ async def update_provider_coach_profile(
     if parsed["intro_thumb_path"] is not None:
         profile.introduction_video_thumbnail = parsed["intro_thumb_path"]
 
-    if parsed["video_duration"] is not None and parsed["video_duration"] > 0:
-        dur = parsed["video_duration"]
+    if parsed["introduction_video_duration"] is not None and parsed["introduction_video_duration"] > 0:
+        dur = parsed["introduction_video_duration"]
         profile.introduction_video_duration = dur
-        profile.video_duration = dur
-        profile.video_display_duration = format_duration(dur)
     elif parsed["intro_video_path"] is not None:
-        dur = parsed.get("video_duration") or 0
+        dur = parsed.get("introduction_video_duration") or 0
         profile.introduction_video_duration = dur
-        profile.video_duration = dur
-        profile.video_display_duration = format_duration(dur)
 
     if parsed["expertises"]:
         profile.expertises = parsed["expertises"]

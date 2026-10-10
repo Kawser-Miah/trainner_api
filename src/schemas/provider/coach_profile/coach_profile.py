@@ -53,13 +53,8 @@ class CoachProfileDataResponse(BaseModel):
     certifications: list[CoachCertificationResponse] = Field(default_factory=list)
     qualifications: list[CoachQualificationResponse] = Field(default_factory=list)
     introduction_video: str | None = None
-    intro_video: str | None = None
-    introvideo: str | None = None
     introduction_video_duration: int | None = 0
     introduction_video_duration_display: str = "0:00"
-    video_duration: int | None = 0
-    video_display_duration: str = "0:00"
-    video_duration_display: str = "0:00"
     introduction_video_thumbnail: str | None = None
     linkedin_url: str | None = None
     affiliate_commission_percent: str = "20.00"

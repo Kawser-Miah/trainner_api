@@ -44,18 +44,6 @@ class CoachProfile(Base):
         nullable=True,
     )
 
-    video_duration: Mapped[int | None] = mapped_column(
-        Integer,
-        default=0,
-        nullable=True,
-    )
-
-    video_display_duration: Mapped[str | None] = mapped_column(
-        String(50),
-        default="0:00",
-        nullable=True,
-    )
-
     introduction_video_thumbnail: Mapped[str | None] = mapped_column(
         String(500),
         nullable=True,
