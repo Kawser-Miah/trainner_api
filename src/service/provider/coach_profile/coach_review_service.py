@@ -57,7 +57,7 @@ async def get_provider_coach_reviews(
 
         formatted_reviews.append(
             CoachReviewItemResponse(
-                id=rev.id,
+                id=rev.user_id,
                 user_name=u_name,
                 user_image=u_img,
                 rating=rev.rating,
