@@ -57,7 +57,8 @@ async def app_exception_handler(
             code=exc.status,
             message=exc.message,
             error=exc.error,
-        ).model_dump(),
+            data=exc.data,
+        ).model_dump(exclude_none=True),
     )
 
 # Configure CORS (Cross-Origin Resource Sharing)

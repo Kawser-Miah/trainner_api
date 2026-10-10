@@ -8,12 +8,14 @@ class AppException(Exception):
         message: str,
         status: int = 400,
         error: Any = None,
+        data: Any = None,
     ):
         super().__init__(message)
 
         self.message = message
         self.status = status
         self.error = error
+        self.data = data
 
 
 class PasswordMismatchException(AppException):
@@ -79,12 +81,15 @@ class InvalidCredentialsException(AppException):
 class EmailNotVerifiedException(AppException):
     def __init__(
         self,
-        message: str = "Your email address is not verified. Please verify your email before accessing this service.",
+        user_id: str | int | None = None,
+        message: str = "Please verify your email address before logging in.",
     ):
+        payload_data = {"user_id": str(user_id)} if user_id is not None else None
         super().__init__(
             error="EMAIL_NOT_VERIFIED",
             message=message,
             status=403,
+            data=payload_data,
         )
 
 

@@ -26,10 +26,11 @@ class ErrorResponse(BaseModel):
     status: int | None = None
     message: str
     error: Any | None = None
+    data: Any | None = None
 
     def __init__(self, **data: Any):
         if "code" in data and "status" not in data:
             data["status"] = data["code"]
         elif "status" in data and "code" not in data:
             data["code"] = data["status"]
-        super().__init__(**data)
+        super().__init__(**data)

@@ -36,7 +36,7 @@ async def sign_in(
 
     # Check email verification
     if not user.is_email_verified:
-        raise EmailNotVerifiedException()
+        raise EmailNotVerifiedException(user_id=user.id)
 
     # Check account status
     if not user.is_active:
