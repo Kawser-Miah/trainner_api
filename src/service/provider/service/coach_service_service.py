@@ -38,7 +38,10 @@ def format_dt(dt: datetime | None) -> str:
     return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def map_service_to_response(service: CoachService) -> CoachServiceDataResponse:
+def map_service_to_response(
+    service: CoachService,
+    user_id: int,
+) -> CoachServiceDataResponse:
     category_resp = None
     if service.category:
         category_resp = ServiceCategoryResponse(
@@ -57,7 +60,7 @@ def map_service_to_response(service: CoachService) -> CoachServiceDataResponse:
 
     return CoachServiceDataResponse(
         id=service.id,
-        coach=service.coach_profile_id,
+        coach=user_id,
         title=service.title,
         description=service.description,
         service_type=service.service_type,
@@ -118,7 +121,7 @@ async def create_provider_service(
         benefits_data=benefits_data,
     )
 
-    return map_service_to_response(service)
+    return map_service_to_response(service, user_id=user.id)
 
 
 async def get_provider_services_list(
@@ -135,7 +138,7 @@ async def get_provider_services_list(
         coach_profile_id=profile.id,
         status=status,
     )
-    return [map_service_to_response(s) for s in services]
+    return [map_service_to_response(s, user_id=user.id) for s in services]
 
 
 async def get_provider_service_detail(
@@ -151,7 +154,7 @@ async def get_provider_service_detail(
     if service is None or service.coach_profile_id != profile.id:
         raise CoachServiceNotFoundException()
 
-    return map_service_to_response(service)
+    return map_service_to_response(service, user_id=user.id)
 
 
 async def update_provider_service(
@@ -191,7 +194,7 @@ async def update_provider_service(
         benefits_data=benefits_data,
     )
 
-    return map_service_to_response(updated_service)
+    return map_service_to_response(updated_service, user_id=user.id)
 
 
 async def delete_provider_service(

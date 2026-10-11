@@ -154,7 +154,7 @@ def test_create_service_flow(test_coach_and_category, db_session):
 
     data = res_data["data"]
     service_id = data["id"]
-    assert data["coach"] == profile.id
+    assert data["coach"] == coach.id
     assert data["title"] == "1:1 Career Session"
     assert data["price"] == "120.00"
     assert data["status"] == "published"

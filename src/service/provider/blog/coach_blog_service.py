@@ -65,6 +65,7 @@ async def save_blog_image(file: Any) -> str | None:
 
 def map_blog_to_response(
     blog: CoachBlog,
+    user_id: int,
     request: Request | None = None,
 ) -> CoachBlogDataResponse:
     category_details = None
@@ -77,7 +78,7 @@ def map_blog_to_response(
 
     return CoachBlogDataResponse(
         id=blog.id,
-        coach=blog.coach_profile_id,
+        coach=user_id,
         category=blog.category_id,
         category_details=category_details,
         title=blog.title,
@@ -120,7 +121,7 @@ async def create_provider_blog(
         status=status,
     )
 
-    return map_blog_to_response(blog, request)
+    return map_blog_to_response(blog, user_id=user.id, request=request)
 
 
 async def get_provider_blogs_list(
@@ -139,7 +140,7 @@ async def get_provider_blogs_list(
         status=status,
     )
 
-    return [map_blog_to_response(b, request) for b in blogs]
+    return [map_blog_to_response(b, user_id=user.id, request=request) for b in blogs]
 
 
 async def get_provider_blog_detail(
@@ -156,7 +157,7 @@ async def get_provider_blog_detail(
     if blog is None or blog.coach_profile_id != profile.id:
         raise CoachBlogNotFoundException()
 
-    return map_blog_to_response(blog, request)
+    return map_blog_to_response(blog, user_id=user.id, request=request)
 
 
 async def update_provider_blog(
@@ -202,7 +203,7 @@ async def update_provider_blog(
         status=status,
     )
 
-    return map_blog_to_response(updated_blog, request)
+    return map_blog_to_response(updated_blog, user_id=user.id, request=request)
 
 
 async def delete_provider_blog(

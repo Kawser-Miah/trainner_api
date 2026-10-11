@@ -114,7 +114,7 @@ def test_create_and_manage_blog(test_coach_and_category, coach_headers, db_sessi
     assert res_json["message"] == "Blog created successfully."
     blog_data = res_json["data"]
     assert blog_data["title"] == "Five habits of great founders"
-    assert blog_data["coach"] == profile.id
+    assert blog_data["coach"] == coach.id
     assert blog_data["category"] == category.id
     assert blog_data["category_details"]["name"] == "Business"
     assert blog_data["status"] == "published"
