@@ -179,3 +179,9 @@ class CoachProfile(Base):
         back_populates="coach_profile",
         cascade="all, delete-orphan",
     )
+
+    products = relationship(
+        "CoachProduct",
+        back_populates="coach_profile",
+        cascade="all, delete-orphan",
+    )

@@ -23,6 +23,7 @@ from src.api.routes.provider.coach_profile import (
 )
 from src.api.routes.provider.blog import coach_blog
 from src.api.routes.provider.service import coach_service
+from src.api.routes.provider.product import coach_product
 
 
 api_router = APIRouter()
@@ -50,4 +51,8 @@ api_router.include_router(coach_service.router, prefix=settings.provider_prefix)
 api_router.include_router(coach_service.router, prefix=settings.provider_prefix.lower(), include_in_schema=False)
 api_router.include_router(coach_blog.router, prefix=settings.provider_prefix)
 api_router.include_router(coach_blog.router, prefix=settings.provider_prefix.lower(), include_in_schema=False)
+api_router.include_router(coach_product.router, prefix=settings.provider_prefix)
+api_router.include_router(coach_product.router, prefix=settings.provider_prefix.lower(), include_in_schema=False)
+api_router.include_router(coach_product.download_router)
+
 

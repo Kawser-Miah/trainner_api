@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     coach_blogs_prefix: str = "/blogs"
     blog_create_prefix: str = "/create"
     blog_list_prefix: str = "/list"
+    coach_products_prefix: str = "/products"
+    product_create_prefix: str = "/create"
+    product_list_prefix: str = "/products-list"
 
 
 

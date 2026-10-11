@@ -108,6 +108,8 @@ media_dir.mkdir(parents=True, exist_ok=True)
 (media_dir / "coach" / "certificates").mkdir(parents=True, exist_ok=True)
 (media_dir / "coach" / "qualifications").mkdir(parents=True, exist_ok=True)
 (media_dir / "coach" / "blogs").mkdir(parents=True, exist_ok=True)
+(media_dir / "coach" / "products").mkdir(parents=True, exist_ok=True)
+(media_dir / "coach" / "products" / "files").mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
 
 # Include API routers
@@ -115,6 +117,11 @@ app.include_router(
     router.api_router,
     prefix=settings.api_prefix,
 )
+app.include_router(
+    router.api_router,
+    include_in_schema=False,
+)
+
 
 # app.include_router(
 #     ai_chat.router,

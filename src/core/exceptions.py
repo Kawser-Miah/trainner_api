@@ -193,3 +193,15 @@ class CoachBlogNotFoundException(AppException):
             status=404,
         )
 
+
+class CoachProductNotFoundException(AppException):
+    def __init__(
+        self,
+        message: str = "Product not found.",
+    ):
+        super().__init__(
+            error="PRODUCT_NOT_FOUND",
+            message=message,
+            status=404,
+        )
+

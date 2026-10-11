@@ -73,6 +73,12 @@ def build_postman_collection():
     provider_blogs_detail_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_blogs_prefix}/{{{{blog_id}}}}")
     provider_blogs_delete_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_blogs_prefix}/{{{{blog_to_delete_id}}}}")
 
+    provider_products_create_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_products_prefix}{settings.product_create_prefix}")
+    provider_products_list_url = build_url_dict(f"{settings.provider_prefix}{settings.product_list_prefix}")
+    provider_products_detail_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_products_prefix}/{{{{product_id}}}}")
+    provider_products_update_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_products_prefix}/{{{{product_id}}}}")
+    provider_products_delete_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_products_prefix}/{{{{product_to_delete_id}}}}")
+
     collection = {
         "info": {
             "_postman_id": collection_id,
@@ -128,6 +134,16 @@ def build_postman_collection():
             },
             {
                 "key": "blog_to_delete_id",
+                "value": "2",
+                "type": "string",
+            },
+            {
+                "key": "product_id",
+                "value": "1",
+                "type": "string",
+            },
+            {
+                "key": "product_to_delete_id",
                 "value": "2",
                 "type": "string",
             },
@@ -1501,8 +1517,335 @@ def build_postman_collection():
                     },
                 ],
             },
+            {
+                "name": "Coach - Products",
+                "item": [
+                    {
+                        "name": "Create Product",
+                        "request": {
+                            "method": "POST",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "body": {
+                                "mode": "formdata",
+                                "formdata": [
+                                    {
+                                        "key": "title",
+                                        "value": "Interview Workbook",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "description",
+                                        "value": "Practice questions",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "category",
+                                        "value": "{{category_id}}",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "price",
+                                        "value": "19.00",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "status",
+                                        "value": "published",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "Thumbnail",
+                                        "type": "file",
+                                        "src": [],
+                                    },
+                                    {
+                                        "key": "book_file",
+                                        "type": "file",
+                                        "src": [],
+                                    },
+                                ],
+                            },
+                            "url": provider_products_create_url,
+                        },
+                        "response": make_response_example(
+                            "Create Product Success Example",
+                            201,
+                            {
+                                "success": True,
+                                "status": 201,
+                                "message": "Product created successfully.",
+                                "data": {
+                                    "id": 3,
+                                    "coach": 4,
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "Interview Workbook",
+                                    "description": "Practice questions",
+                                    "Thumbnail": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/products/photo.gif",
+                                    "download_url": "https://4234cwc7-8004.inc1.devtunnels.ms/api/v1/user/digital-product-download/3/",
+                                    "preview_file": None,
+                                    "page_count": None,
+                                    "preview_page_count": None,
+                                    "file_type": "PDF",
+                                    "price": "19.00",
+                                    "status": "published",
+                                    "sales_count": 0,
+                                    "revenue": "0.00",
+                                    "created_at": "2026-09-30T05:36:51.694109Z",
+                                    "updated_at": "2026-09-30T05:36:51.694109Z",
+                                },
+                            },
+                        ),
+                        "event": [
+                            {
+                                "listen": "test",
+                                "script": {
+                                    "exec": [
+                                        "var jsonData = pm.response.json();",
+                                        "if (jsonData && jsonData.data && jsonData.data.id) {",
+                                        '    pm.collectionVariables.set("product_id", jsonData.data.id);',
+                                        "}",
+                                    ],
+                                    "type": "text/javascript",
+                                },
+                            }
+                        ],
+                    },
+                    {
+                        "name": "List Products",
+                        "request": {
+                            "method": "GET",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_products_list_url,
+                        },
+                        "response": make_response_example(
+                            "List Products Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Products retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 3,
+                                        "coach": 4,
+                                        "category": 1,
+                                        "category_details": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "title": "Interview Workbook",
+                                        "description": "Practice questions",
+                                        "Thumbnail": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/products/photo.gif",
+                                        "download_url": "https://4234cwc7-8004.inc1.devtunnels.ms/api/v1/user/digital-product-download/3/",
+                                        "preview_file": None,
+                                        "page_count": None,
+                                        "preview_page_count": None,
+                                        "file_type": "PDF",
+                                        "price": "19.00",
+                                        "status": "published",
+                                        "sales_count": 0,
+                                        "revenue": "0.00",
+                                        "created_at": "2026-09-30T05:36:51.694109Z",
+                                        "updated_at": "2026-09-30T05:36:51.694109Z",
+                                    },
+                                    {
+                                        "id": 2,
+                                        "coach": 4,
+                                        "category": 1,
+                                        "category_details": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "title": "Old Guide",
+                                        "description": "x",
+                                        "Thumbnail": None,
+                                        "download_url": None,
+                                        "preview_file": None,
+                                        "page_count": None,
+                                        "preview_page_count": None,
+                                        "file_type": None,
+                                        "price": "9.00",
+                                        "status": "draft",
+                                        "sales_count": 0,
+                                        "revenue": "0.00",
+                                        "created_at": "2026-09-30T05:36:45.664895Z",
+                                        "updated_at": "2026-09-30T05:36:45.664895Z",
+                                    },
+                                    {
+                                        "id": 1,
+                                        "coach": 4,
+                                        "category": 1,
+                                        "category_details": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "title": "Founder Playbook",
+                                        "description": "A practical guide.",
+                                        "Thumbnail": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/products/cover.gif",
+                                        "download_url": "https://4234cwc7-8004.inc1.devtunnels.ms/api/v1/user/digital-product-download/1/",
+                                        "preview_file": None,
+                                        "page_count": None,
+                                        "preview_page_count": None,
+                                        "file_type": "PDF",
+                                        "price": "29.00",
+                                        "status": "published",
+                                        "sales_count": 1,
+                                        "revenue": "29.00",
+                                        "created_at": "2026-09-30T05:36:45.652379Z",
+                                        "updated_at": "2026-09-30T05:36:45.660086Z",
+                                    },
+                                ],
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Get Product Detail",
+                        "request": {
+                            "method": "GET",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_products_detail_url,
+                        },
+                        "response": make_response_example(
+                            "Get Product Detail Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Product retrieved successfully.",
+                                "data": {
+                                    "id": 1,
+                                    "coach": 4,
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "Founder Playbook",
+                                    "description": "A practical guide.",
+                                    "Thumbnail": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/products/cover.gif",
+                                    "download_url": "https://4234cwc7-8004.inc1.devtunnels.ms/api/v1/user/digital-product-download/1/",
+                                    "preview_file": None,
+                                    "page_count": None,
+                                    "preview_page_count": None,
+                                    "file_type": "PDF",
+                                    "price": "29.00",
+                                    "status": "published",
+                                    "sales_count": 1,
+                                    "revenue": "29.00",
+                                    "created_at": "2026-09-30T05:36:45.652379Z",
+                                    "updated_at": "2026-09-30T05:36:45.660086Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Update Product",
+                        "request": {
+                            "method": "PATCH",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "body": {
+                                "mode": "formdata",
+                                "formdata": [
+                                    {
+                                        "key": "price",
+                                        "value": "25.00",
+                                        "type": "text",
+                                    },
+                                ],
+                            },
+                            "url": provider_products_update_url,
+                        },
+                        "response": make_response_example(
+                            "Update Product Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Product updated successfully.",
+                                "data": {
+                                    "id": 1,
+                                    "coach": 4,
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "Founder Playbook",
+                                    "description": "A practical guide.",
+                                    "Thumbnail": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/products/cover.gif",
+                                    "download_url": "https://4234cwc7-8004.inc1.devtunnels.ms/api/v1/user/digital-product-download/1/",
+                                    "preview_file": None,
+                                    "page_count": None,
+                                    "preview_page_count": None,
+                                    "file_type": "PDF",
+                                    "price": "25.00",
+                                    "status": "published",
+                                    "sales_count": 1,
+                                    "revenue": "29.00",
+                                    "created_at": "2026-09-30T05:36:45.652379Z",
+                                    "updated_at": "2026-09-30T05:36:51.767386Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Delete Product",
+                        "request": {
+                            "method": "DELETE",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_products_delete_url,
+                        },
+                        "response": make_response_example(
+                            "Delete Product Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Product deleted successfully.",
+                                "data": {"id": 2},
+                            },
+                        ),
+                    },
+                ],
+            },
         ],
     }
+
 
     return collection
 
