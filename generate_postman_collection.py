@@ -1,4 +1,4 @@
-﻿import json
+import json
 import uuid
 from pathlib import Path
 
@@ -55,6 +55,24 @@ def build_postman_collection():
     provider_services_detail_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_services_prefix}/{{{{service_id}}}}")
     provider_services_delete_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_services_prefix}/{{{{service_to_delete_id}}}}")
 
+    provider_blogs_create_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_blogs_prefix}{settings.blog_create_prefix}")
+    blogs_list_full_path = f"{settings.api_prefix}{settings.provider_prefix}{settings.coach_blogs_prefix}{settings.blog_create_prefix}"
+    blogs_list_segments = [seg for seg in blogs_list_full_path.split("/") if seg]
+    provider_blogs_list_url = {
+        "raw": f"{{{{base_url}}}}{blogs_list_full_path}?status=published",
+        "host": ["{{base_url}}"],
+        "path": blogs_list_segments,
+        "query": [
+            {
+                "key": "status",
+                "value": "published",
+                "description": "Filter blogs by status",
+            }
+        ],
+    }
+    provider_blogs_detail_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_blogs_prefix}/{{{{blog_id}}}}")
+    provider_blogs_delete_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_blogs_prefix}/{{{{blog_to_delete_id}}}}")
+
     collection = {
         "info": {
             "_postman_id": collection_id,
@@ -101,6 +119,16 @@ def build_postman_collection():
             {
                 "key": "service_to_delete_id",
                 "value": "3",
+                "type": "string",
+            },
+            {
+                "key": "blog_id",
+                "value": "1",
+                "type": "string",
+            },
+            {
+                "key": "blog_to_delete_id",
+                "value": "2",
                 "type": "string",
             },
         ],
@@ -1210,6 +1238,264 @@ def build_postman_collection():
                                 "status": 200,
                                 "message": "Service deleted successfully.",
                                 "data": {"id": 3},
+                            },
+                        ),
+                    },
+                ],
+            },
+            {
+                "name": "Coach - Blogs",
+                "item": [
+                    {
+                        "name": "Create Blog",
+                        "request": {
+                            "method": "POST",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "body": {
+                                "mode": "formdata",
+                                "formdata": [
+                                    {
+                                        "key": "title",
+                                        "value": "Five habits of great founders",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "category",
+                                        "value": "{{category_id}}",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "content",
+                                        "value": "Long article text...",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "status",
+                                        "value": "published",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "image",
+                                        "type": "file",
+                                        "src": [],
+                                    },
+                                ],
+                            },
+                            "url": provider_blogs_create_url,
+                        },
+                        "response": make_response_example(
+                            "Create Blog Success Example",
+                            201,
+                            {
+                                "success": True,
+                                "status": 201,
+                                "message": "Blog created successfully.",
+                                "data": {
+                                    "id": 3,
+                                    "coach": 4,
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "Five habits of great founders",
+                                    "content": "Long article text...",
+                                    "image": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/blogs/photo.gif",
+                                    "status": "published",
+                                    "created_at": "2026-09-30T05:36:51.661056Z",
+                                    "updated_at": "2026-09-30T05:36:51.661056Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "List Blogs",
+                        "request": {
+                            "method": "GET",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_blogs_list_url,
+                        },
+                        "response": make_response_example(
+                            "List Blogs Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Blogs retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 3,
+                                        "coach": 4,
+                                        "category": 1,
+                                        "category_details": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "title": "Five habits of great founders",
+                                        "content": "Long article text...",
+                                        "image": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/blogs/photo.gif",
+                                        "status": "published",
+                                        "created_at": "2026-09-30T05:36:51.661056Z",
+                                        "updated_at": "2026-09-30T05:36:51.661056Z",
+                                    },
+                                    {
+                                        "id": 1,
+                                        "coach": 4,
+                                        "category": 1,
+                                        "category_details": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "title": "How to Build Confidence",
+                                        "content": "Confidence is key. Confidence is key. Confidence is key...",
+                                        "image": None,
+                                        "status": "published",
+                                        "created_at": "2026-09-30T05:36:45.669031Z",
+                                        "updated_at": "2026-09-30T05:36:45.669031Z",
+                                    },
+                                ],
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Get Blog Detail",
+                        "request": {
+                            "method": "GET",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_blogs_detail_url,
+                        },
+                        "response": make_response_example(
+                            "Get Blog Detail Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Blog retrieved successfully.",
+                                "data": {
+                                    "id": 1,
+                                    "coach": 4,
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "How to Build Confidence",
+                                    "content": "Confidence is key. Confidence is key...",
+                                    "image": None,
+                                    "status": "published",
+                                    "created_at": "2026-09-30T05:36:45.669031Z",
+                                    "updated_at": "2026-09-30T05:36:45.669031Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Update Blog",
+                        "request": {
+                            "method": "PATCH",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "body": {
+                                "mode": "formdata",
+                                "formdata": [
+                                    {
+                                        "key": "title",
+                                        "value": "Five habits of great founders (Updated)",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "category",
+                                        "value": "{{category_id}}",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "content",
+                                        "value": "Updated article text...",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "status",
+                                        "value": "published",
+                                        "type": "text",
+                                    },
+                                    {
+                                        "key": "image",
+                                        "type": "file",
+                                        "src": [],
+                                    },
+                                ],
+                            },
+                            "url": provider_blogs_detail_url,
+                        },
+                        "response": make_response_example(
+                            "Update Blog Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Blog updated successfully.",
+                                "data": {
+                                    "id": 3,
+                                    "coach": 4,
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "Five habits of great founders (Updated)",
+                                    "content": "Updated article text...",
+                                    "image": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/blogs/photo.gif",
+                                    "status": "published",
+                                    "created_at": "2026-09-30T05:36:51.661056Z",
+                                    "updated_at": "2026-09-30T05:37:10.123456Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Delete Blog",
+                        "request": {
+                            "method": "DELETE",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_blogs_delete_url,
+                        },
+                        "response": make_response_example(
+                            "Delete Blog Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Blog deleted successfully.",
+                                "data": {"id": 2},
                             },
                         ),
                     },

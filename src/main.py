@@ -107,6 +107,7 @@ media_dir.mkdir(parents=True, exist_ok=True)
 (media_dir / "coach" / "videos" / "thumbnails").mkdir(parents=True, exist_ok=True)
 (media_dir / "coach" / "certificates").mkdir(parents=True, exist_ok=True)
 (media_dir / "coach" / "qualifications").mkdir(parents=True, exist_ok=True)
+(media_dir / "coach" / "blogs").mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
 
 # Include API routers

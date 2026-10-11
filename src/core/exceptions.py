@@ -181,3 +181,15 @@ class CoachServiceNotFoundException(AppException):
             status=404,
         )
 
+
+class CoachBlogNotFoundException(AppException):
+    def __init__(
+        self,
+        message: str = "Blog not found.",
+    ):
+        super().__init__(
+            error="BLOG_NOT_FOUND",
+            message=message,
+            status=404,
+        )
+

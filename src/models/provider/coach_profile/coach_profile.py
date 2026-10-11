@@ -173,3 +173,9 @@ class CoachProfile(Base):
         back_populates="coach_profile",
         cascade="all, delete-orphan",
     )
+
+    blogs = relationship(
+        "CoachBlog",
+        back_populates="coach_profile",
+        cascade="all, delete-orphan",
+    )
