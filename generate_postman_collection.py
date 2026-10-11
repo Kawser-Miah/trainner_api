@@ -50,6 +50,10 @@ def build_postman_collection():
     provider_profile_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_profile_prefix}")
     provider_availability_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_availability_prefix}")
     provider_reviews_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_reviews_prefix}")
+    provider_services_create_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_services_prefix}{settings.service_create_prefix}")
+    provider_services_list_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_services_prefix}{settings.service_list_prefix}")
+    provider_services_detail_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_services_prefix}/{{{{service_id}}}}")
+    provider_services_delete_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_services_prefix}/{{{{service_to_delete_id}}}}")
 
     collection = {
         "info": {
@@ -84,7 +88,23 @@ def build_postman_collection():
                 "value": "",
                 "type": "string",
             },
+            {
+                "key": "service_id",
+                "value": "1",
+                "type": "string",
+            },
+            {
+                "key": "category_id",
+                "value": "1",
+                "type": "string",
+            },
+            {
+                "key": "service_to_delete_id",
+                "value": "3",
+                "type": "string",
+            },
         ],
+
         "item": [
             {
                 "name": "Authentication",
@@ -894,6 +914,297 @@ def build_postman_collection():
                                         }
                                     ],
                                 },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Create Coach Service",
+                        "request": {
+                            "method": "POST",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                },
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json",
+                                },
+                            ],
+                            "body": {
+                                "mode": "raw",
+                                "raw": json.dumps(
+                                    {
+                                        "title": "1:1 Career Session",
+                                        "category": 1,
+                                        "description": "Plan your next career move.",
+                                        "service_type": "one_time",
+                                        "session_format": "video",
+                                        "session_duration": 60,
+                                        "currency": "USD",
+                                        "price": "120.00",
+                                        "booking_type": "instant",
+                                        "who_is_this_service_for": "Engineers",
+                                        "preparation_instructions": "Bring your CV",
+                                        "cancellation_policy": "standard",
+                                        "session_url": "https://meet.google.com/abc-defg-hij",
+                                        "status": "published",
+                                        "benefits": [
+                                            {"outcome": "A clear career plan"},
+                                            {"outcome": "CV feedback"},
+                                        ],
+                                    },
+                                    indent=2,
+                                ),
+                            },
+                            "url": provider_services_create_url,
+                        },
+                        "response": make_response_example(
+                            "Create Service Success Example",
+                            201,
+                            {
+                                "success": True,
+                                "status": 201,
+                                "message": "Service created successfully.",
+                                "data": {
+                                    "id": 4,
+                                    "coach": 4,
+                                    "title": "1:1 Career Session",
+                                    "description": "Plan your next career move.",
+                                    "service_type": "one_time",
+                                    "session_format": "video",
+                                    "session_duration": 60,
+                                    "currency": "USD",
+                                    "price": "120.00",
+                                    "booking_type": "instant",
+                                    "who_is_this_service_for": "Engineers",
+                                    "preparation_instructions": "Bring your CV",
+                                    "cancellation_policy": "standard",
+                                    "session_url": "https://meet.google.com/abc-defg-hij",
+                                    "status": "published",
+                                    "benefits": [
+                                        {"id": 2, "outcome": "A clear career plan"},
+                                        {"id": 3, "outcome": "CV feedback"},
+                                    ],
+                                    "category": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "bookings_count": 0,
+                                    "revenue": "0.00",
+                                    "created_at": "2026-09-30T05:36:51.620395Z",
+                                    "updated_at": "2026-09-30T05:36:51.620395Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "List Coach Services",
+                        "request": {
+                            "method": "GET",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": {
+                                **provider_services_list_url,
+                                "query": [
+                                    {
+                                        "key": "status",
+                                        "value": "published",
+                                        "description": "Optional status filter (e.g. published)",
+                                    }
+                                ],
+                            },
+                        },
+                        "response": make_response_example(
+                            "List Services Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Services retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 4,
+                                        "coach": 4,
+                                        "title": "1:1 Career Session",
+                                        "description": "Plan your next career move.",
+                                        "service_type": "one_time",
+                                        "session_format": "video",
+                                        "session_duration": 60,
+                                        "currency": "USD",
+                                        "price": "120.00",
+                                        "booking_type": "instant",
+                                        "who_is_this_service_for": "Engineers",
+                                        "preparation_instructions": "Bring your CV",
+                                        "cancellation_policy": "standard",
+                                        "session_url": "https://meet.google.com/abc-defg-hij",
+                                        "status": "published",
+                                        "benefits": [
+                                            {"id": 2, "outcome": "A clear career plan"},
+                                            {"id": 3, "outcome": "CV feedback"},
+                                        ],
+                                        "category": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "bookings_count": 0,
+                                        "revenue": "0.00",
+                                        "created_at": "2026-09-30T05:36:51.620395Z",
+                                        "updated_at": "2026-09-30T05:36:51.620395Z",
+                                    }
+                                ],
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Get Coach Service Detail",
+                        "request": {
+                            "method": "GET",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_services_detail_url,
+                        },
+                        "response": make_response_example(
+                            "Get Service Detail Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Service retrieved successfully.",
+                                "data": {
+                                    "id": 1,
+                                    "coach": 4,
+                                    "title": "Strategy Session",
+                                    "description": "A 1:1 strategy session.",
+                                    "service_type": "one_time",
+                                    "session_format": "video",
+                                    "session_duration": 60,
+                                    "currency": "USD",
+                                    "price": "150.00",
+                                    "booking_type": "instant",
+                                    "who_is_this_service_for": "Founders and managers",
+                                    "preparation_instructions": "Write down your top 3 goals\nBring your latest numbers",
+                                    "cancellation_policy": "flexible",
+                                    "session_url": "https://meet.google.com/abc-defg-hij",
+                                    "status": "published",
+                                    "benefits": [
+                                        {"id": 1, "outcome": "A clear 90-day plan"}
+                                    ],
+                                    "category": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "bookings_count": 5,
+                                    "revenue": "750.00",
+                                    "created_at": "2026-09-30T05:36:45.638870Z",
+                                    "updated_at": "2026-09-30T05:36:45.638870Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Update Coach Service",
+                        "request": {
+                            "method": "PATCH",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                },
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json",
+                                },
+                            ],
+                            "body": {
+                                "mode": "raw",
+                                "raw": json.dumps(
+                                    {
+                                        "title": "Strategy Session",
+                                        "price": "160.00",
+                                        "booking_type": "instant",
+                                        "cancellation_policy": "flexible",
+                                        "benefits": [
+                                            {"outcome": "A clear 90-day plan"},
+                                            {"outcome": "Accountability"},
+                                        ],
+                                    },
+                                    indent=2,
+                                ),
+                            },
+                            "url": provider_services_detail_url,
+                        },
+                        "response": make_response_example(
+                            "Update Service Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Service updated successfully.",
+                                "data": {
+                                    "id": 1,
+                                    "coach": 4,
+                                    "title": "Strategy Session",
+                                    "description": "A 1:1 strategy session.",
+                                    "service_type": "one_time",
+                                    "session_format": "video",
+                                    "session_duration": 60,
+                                    "currency": "USD",
+                                    "price": "160.00",
+                                    "booking_type": "instant",
+                                    "who_is_this_service_for": "Founders and managers",
+                                    "preparation_instructions": "Write down your top 3 goals\nBring your latest numbers",
+                                    "cancellation_policy": "flexible",
+                                    "session_url": "https://meet.google.com/abc-defg-hij",
+                                    "status": "published",
+                                    "benefits": [
+                                        {"id": 4, "outcome": "A clear 90-day plan"},
+                                        {"id": 5, "outcome": "Accountability"},
+                                    ],
+                                    "category": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "bookings_count": 5,
+                                    "revenue": "750.00",
+                                    "created_at": "2026-09-30T05:36:45.638870Z",
+                                    "updated_at": "2026-09-30T05:36:51.644276Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Delete Coach Service",
+                        "request": {
+                            "method": "DELETE",
+                            "header": [
+                                {
+                                    "key": "Authorization",
+                                    "value": "Bearer {{access_token}}",
+                                }
+                            ],
+                            "url": provider_services_delete_url,
+                        },
+                        "response": make_response_example(
+                            "Delete Service Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Service deleted successfully.",
+                                "data": {"id": 3},
                             },
                         ),
                     },

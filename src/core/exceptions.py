@@ -157,3 +157,27 @@ class CoachProfileNotFoundException(AppException):
             status=404,
         )
 
+
+class CategoryNotFoundException(AppException):
+    def __init__(
+        self,
+        message: str = "Category not found.",
+    ):
+        super().__init__(
+            error="CATEGORY_NOT_FOUND",
+            message=message,
+            status=404,
+        )
+
+
+class CoachServiceNotFoundException(AppException):
+    def __init__(
+        self,
+        message: str = "Service not found.",
+    ):
+        super().__init__(
+            error="SERVICE_NOT_FOUND",
+            message=message,
+            status=404,
+        )
+

@@ -167,3 +167,9 @@ class CoachProfile(Base):
         back_populates="coach_profile",
         cascade="all, delete-orphan",
     )
+
+    services = relationship(
+        "CoachService",
+        back_populates="coach_profile",
+        cascade="all, delete-orphan",
+    )

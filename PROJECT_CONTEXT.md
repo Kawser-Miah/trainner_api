@@ -120,6 +120,8 @@ D:\backend\coach/
 - **`coach_profile_categories`**: `id` (PK), `coach_profile_id` (FK), `category_id` (FK).
 - **`coach_certifications`**: `id` (PK), `coach_profile_id` (FK), `name`, `document`, `created_at`.
 - **`coach_qualifications`**: `id` (PK), `coach_profile_id` (FK), `name`, `document`, `created_at`.
+- **`coach_services`**: `id` (PK), `coach_profile_id` (FK), `category_id` (FK), `title`, `description`, `service_type`, `session_format`, `session_duration`, `currency`, `price`, `booking_type`, `who_is_this_service_for`, `preparation_instructions`, `cancellation_policy`, `session_url`, `status`, `bookings_count`, `revenue`, `created_at`, `updated_at`.
+- **`coach_service_benefits`**: `id` (PK), `service_id` (FK `coach_services.id`, CASCADE), `outcome`, `created_at`.
 
 ---
 
@@ -167,7 +169,16 @@ All endpoints return standard envelopes:
 | `GET` | `/api/Provider/coach-profile` | Yes (Bearer) | Any Authenticated | Retrieve authenticated coach's profile directly from DB | None |
 | `POST` | `/api/Provider/coach-profile` | Yes (Bearer) | Any Authenticated | Create coach profile with multipart data (user can provide only introvideo; auto-calculates and persists video duration to DB) | Multipart form fields: file `introvideo` / `intro_video` / `introduction_video`, optional profile fields |
 | `PATCH`| `/api/Provider/coach-profile` | Yes (Bearer) | Any Authenticated | Update existing coach profile (recalculates & persists duration to DB if video uploaded) | Same multipart form fields & files as POST |
+| `GET` | `/api/Provider/coach-availability` | Yes (Bearer) | Approved Coach | Retrieve authenticated coach's availability schedule | None |
+| `PUT` | `/api/Provider/coach-availability` | Yes (Bearer) | Approved Coach | Update authenticated coach's availability schedule | `UpdateCoachAvailabilityRequest` |
+| `GET` | `/api/Provider/reviews` | Yes (Bearer) | Approved Coach | Retrieve reviews and ratings for coach profile | None |
+| `POST` | `/api/Provider/services/create` | Yes (Bearer) | Approved Coach | Create a new coach service offering | `CreateCoachServiceRequest` (`title`, `category`, `description`, `price`, `benefits`, etc.) |
+| `GET` | `/api/Provider/services/list` | Yes (Bearer) | Approved Coach | List coach services (optional `status` query filter) | Query param: `status` |
+| `GET` | `/api/Provider/services/{id}` | Yes (Bearer) | Approved Coach | Retrieve details of a specific service | Path param: `service_id` |
+| `PATCH`| `/api/Provider/services/{id}` | Yes (Bearer) | Approved Coach | Update a specific service | `UpdateCoachServiceRequest` |
+| `DELETE`| `/api/Provider/services/{id}` | Yes (Bearer) | Approved Coach | Delete a specific service | Path param: `service_id` |
 | `GET` | `/health` | No | None | Health check | None |
+
 | `GET` | `/` | No | None | Root metadata & docs pointers | None |
 
 ---

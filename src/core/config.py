@@ -60,8 +60,9 @@ class Settings(BaseSettings):
     coach_profile_prefix: str = "/coach-profile"
     coach_availability_prefix: str = "/coach-availability"
     coach_reviews_prefix: str = "/reviews"
-
-
+    coach_services_prefix: str = "/services"
+    service_create_prefix: str = "/create"
+    service_list_prefix: str = "/list"
 
 
 
