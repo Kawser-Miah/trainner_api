@@ -1,4 +1,4 @@
-import json
+﻿import json
 import uuid
 from pathlib import Path
 
@@ -917,8 +917,13 @@ def build_postman_collection():
                             },
                         ),
                     },
+                ],
+            },
+            {
+                "name": "Coach - Services",
+                "item": [
                     {
-                        "name": "Create Coach Service",
+                        "name": "Create Service",
                         "request": {
                             "method": "POST",
                             "header": [
@@ -1000,7 +1005,7 @@ def build_postman_collection():
                         ),
                     },
                     {
-                        "name": "List Coach Services",
+                        "name": "List Services",
                         "request": {
                             "method": "GET",
                             "header": [
@@ -1015,7 +1020,7 @@ def build_postman_collection():
                                     {
                                         "key": "status",
                                         "value": "published",
-                                        "description": "Optional status filter (e.g. published)",
+                                        "description": "Optional status filter (e.g. published). Omit to return all.",
                                     }
                                 ],
                             },
@@ -1063,7 +1068,7 @@ def build_postman_collection():
                         ),
                     },
                     {
-                        "name": "Get Coach Service Detail",
+                        "name": "Get Service Detail",
                         "request": {
                             "method": "GET",
                             "header": [
@@ -1114,7 +1119,7 @@ def build_postman_collection():
                         ),
                     },
                     {
-                        "name": "Update Coach Service",
+                        "name": "Update Service",
                         "request": {
                             "method": "PATCH",
                             "header": [
@@ -1186,7 +1191,7 @@ def build_postman_collection():
                         ),
                     },
                     {
-                        "name": "Delete Coach Service",
+                        "name": "Delete Service",
                         "request": {
                             "method": "DELETE",
                             "header": [

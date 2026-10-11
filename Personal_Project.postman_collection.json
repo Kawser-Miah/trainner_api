@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "a3db71e5-80aa-4372-8619-d7319842839b",
+    "_postman_id": "666eff4d-8586-458c-98ff-7638b967bce2",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -972,9 +972,14 @@
               "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Reviews retrieved successfully.\",\n  \"data\": {\n    \"avg_rating\": 5.0,\n    \"total_reviews\": 1,\n    \"rating_breakdown\": {\n      \"5\": 1,\n      \"4\": 0,\n      \"3\": 0,\n      \"2\": 0,\n      \"1\": 0\n    },\n    \"reviews\": [\n      {\n        \"id\": 1,\n        \"user_name\": \"Jane Buyer\",\n        \"user_image\": null,\n        \"rating\": 5,\n        \"review\": \"Brilliant session, very practical.\",\n        \"created_at\": \"2026-09-30T05:36:45.966655Z\"\n      }\n    ]\n  }\n}"
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "name": "Coach - Services",
+      "item": [
         {
-          "name": "Create Coach Service",
+          "name": "Create Service",
           "request": {
             "method": "POST",
             "header": [
@@ -1023,7 +1028,7 @@
           ]
         },
         {
-          "name": "List Coach Services",
+          "name": "List Services",
           "request": {
             "method": "GET",
             "header": [
@@ -1047,7 +1052,7 @@
                 {
                   "key": "status",
                   "value": "published",
-                  "description": "Optional status filter (e.g. published)"
+                  "description": "Optional status filter (e.g. published). Omit to return all."
                 }
               ]
             }
@@ -1071,7 +1076,7 @@
           ]
         },
         {
-          "name": "Get Coach Service Detail",
+          "name": "Get Service Detail",
           "request": {
             "method": "GET",
             "header": [
@@ -1112,7 +1117,7 @@
           ]
         },
         {
-          "name": "Update Coach Service",
+          "name": "Update Service",
           "request": {
             "method": "PATCH",
             "header": [
@@ -1161,7 +1166,7 @@
           ]
         },
         {
-          "name": "Delete Coach Service",
+          "name": "Delete Service",
           "request": {
             "method": "DELETE",
             "header": [
