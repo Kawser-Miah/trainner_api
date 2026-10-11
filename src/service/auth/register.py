@@ -37,7 +37,7 @@ async def register_user(
         full_name=register_account_request.full_name,
         email=email,
         address=register_account_request.address,
-        phone=register_account_request.phone,
+        phone=register_account_request.phone_number,
         password_hash=hash_password(
             register_account_request.password
         ),
