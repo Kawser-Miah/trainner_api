@@ -25,6 +25,17 @@ from src.api.routes.provider.blog import coach_blog
 from src.api.routes.provider.service import coach_service
 from src.api.routes.provider.product import coach_product
 from src.api.routes.provider.category import coach_category
+from src.api.routes.client.browse import (
+    user_category_list_router,
+    coach_profile_list_router,
+    recommended_coach_profile_list_router,
+    coach_profile_detail_router,
+    coach_availability_date_router,
+    coach_availability_month_router,
+    coach_reviews_router,
+    user_service_list_router,
+    user_service_detail_router,
+)
 
 
 api_router = APIRouter()
@@ -57,5 +68,17 @@ api_router.include_router(coach_product.router, prefix=settings.provider_prefix.
 api_router.include_router(coach_category.router, prefix=settings.provider_prefix)
 api_router.include_router(coach_category.router, prefix=settings.provider_prefix.lower(), include_in_schema=False)
 api_router.include_router(coach_product.download_router)
+
+# Client Browse endpoints (/user)
+api_router.include_router(user_category_list_router, prefix=settings.client_prefix)
+api_router.include_router(coach_profile_list_router, prefix=settings.client_prefix)
+api_router.include_router(recommended_coach_profile_list_router, prefix=settings.client_prefix)
+api_router.include_router(coach_profile_detail_router, prefix=settings.client_prefix)
+api_router.include_router(coach_availability_date_router, prefix=settings.client_prefix)
+api_router.include_router(coach_availability_month_router, prefix=settings.client_prefix)
+api_router.include_router(coach_reviews_router, prefix=settings.client_prefix)
+api_router.include_router(user_service_list_router, prefix=settings.client_prefix)
+api_router.include_router(user_service_detail_router, prefix=settings.client_prefix)
+
 
 

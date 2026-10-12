@@ -71,6 +71,15 @@ class Settings(BaseSettings):
     product_create_prefix: str = "/create"
     product_list_prefix: str = "/products-list"
     category_list_prefix: str = "/categories-list"
+    user_category_list_prefix: str = "/user-category-list"
+    coach_profile_list_prefix: str = "/coach-profile-list"
+    recommended_coach_profile_list_prefix: str = "/recommended-coach-profile-list"
+    client_coach_profile_detail_prefix: str = "/coach-profile"
+    client_coaches_prefix: str = "/coaches"
+    client_availability_prefix: str = "/availability"
+    client_reviews_prefix: str = "/reviews"
+    user_service_list_prefix: str = "/user-service-list"
+    user_service_detail_prefix: str = "/user-service-detail"
 
 
 

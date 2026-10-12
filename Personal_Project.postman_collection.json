@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "d16dd0f8-71a0-489d-9add-8637a46606e2",
+    "_postman_id": "4cde1761-049a-42da-b13f-d23cdd32c42d",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -64,6 +64,21 @@
     {
       "key": "product_to_delete_id",
       "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "coach_profile_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "next_monday",
+      "value": "2026-10-12",
+      "type": "string"
+    },
+    {
+      "key": "month",
+      "value": "2026-10",
       "type": "string"
     }
   ],
@@ -1809,6 +1824,261 @@
               "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Product deleted successfully.\",\n  \"data\": {\n    \"id\": 2\n  }\n}"
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Client - Browse",
+      "item": [
+        {
+          "name": "User Category List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/user-category-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "user-category-list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Coach Profile List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/coach-profile-list?search=&category=&ordering=rating",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coach-profile-list"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "category",
+                  "value": ""
+                },
+                {
+                  "key": "ordering",
+                  "value": "rating"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recommended Coach Profile List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/recommended-coach-profile-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "recommended-coach-profile-list"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Coach Profile Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/coach-profile/{{coach_profile_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coach-profile",
+                "{{coach_profile_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Coach Availability (Date)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/coaches/{{coach_profile_id}}/availability?date={{next_monday}}&service_id={{service_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coaches",
+                "{{coach_profile_id}}",
+                "availability"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{next_monday}}"
+                },
+                {
+                  "key": "service_id",
+                  "value": "{{service_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Coach Availability (Month)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/coaches/{{coach_profile_id}}/availability?month={{month}}&service_id={{service_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coaches",
+                "{{coach_profile_id}}",
+                "availability"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                },
+                {
+                  "key": "service_id",
+                  "value": "{{service_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Coach Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/coaches/{{coach_profile_id}}/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "coaches",
+                "{{coach_profile_id}}",
+                "reviews"
+              ]
+            }
+          }
+        },
+        {
+          "name": "User Service List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/user-service-list?search=&coach_profile={{coach_profile_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "user-service-list"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "coach_profile",
+                  "value": "{{coach_profile_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "User Service Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/user-service-detail/{{service_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "user-service-detail",
+                "{{service_id}}"
+              ]
+            }
+          }
         }
       ]
     }

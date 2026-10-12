@@ -293,6 +293,18 @@ All endpoints return standard envelopes:
 | `DELETE`| `/Provider/products/{id}` | Yes (Bearer) | Approved Coach | Delete digital product | Path param: `product_id` |
 | `GET` | `/api/v1/user/digital-product-download/{id}/` | No | Any | Download digital book file | Path param: `product_id` |
 
+#### 6. Client - Browse (`/user`)
+| Method | Endpoint | Auth Required | Role Required | Description | Request Payload / Params |
+|---|---|:---:|:---:|---|---|
+| `GET` | `/user/user-category-list` | Yes (Bearer) | Client (`USER`) | List active categories for clients | None |
+| `GET` | `/user/coach-profile-list` | Yes (Bearer) | Client (`USER`) | List approved coaches | Query: `search`, `category`, `ordering` |
+| `GET` | `/user/recommended-coach-profile-list` | Yes (Bearer) | Client (`USER`) | List recommended coaches | None |
+| `GET` | `/user/coach-profile/{coach_profile_id}` | Yes (Bearer) | Client (`USER`) | Get coach profile details with services, products, blogs | Path: `coach_profile_id` |
+| `GET` | `/user/coaches/{coach_profile_id}/availability` | Yes (Bearer) | Client (`USER`) | Get coach time slots by date or available dates by month | Query: `date` or `month`, `service_id` |
+| `GET` | `/user/coaches/{coach_profile_id}/reviews` | Yes (Bearer) | Client (`USER`) | Get coach reviews and breakdown | Path: `coach_profile_id` |
+| `GET` | `/user/user-service-list` | Yes (Bearer) | Client (`USER`) | List published coach services | Query: `search`, `coach_profile`, `category` |
+| `GET` | `/user/user-service-detail/{service_id}` | Yes (Bearer) | Client (`USER`) | Get service detail and other coach sessions | Path: `service_id` |
+
 ---
 
 ## 6. Authentication & Security Flow

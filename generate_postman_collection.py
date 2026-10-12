@@ -84,6 +84,71 @@ def build_postman_collection():
     provider_products_update_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_products_prefix}/{{{{product_id}}}}")
     provider_products_delete_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_products_prefix}/{{{{product_to_delete_id}}}}")
 
+    # Client Browse URLs
+    c_prefix = settings.client_prefix.lstrip("/")
+    client_category_list_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.user_category_list_prefix}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.user_category_list_prefix.strip("/")],
+    }
+    client_coach_profile_list_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.coach_profile_list_prefix}?search=&category=&ordering=rating",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.coach_profile_list_prefix.strip("/")],
+        "query": [
+            {"key": "search", "value": ""},
+            {"key": "category", "value": ""},
+            {"key": "ordering", "value": "rating"},
+        ],
+    }
+    client_recommended_coaches_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.recommended_coach_profile_list_prefix}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.recommended_coach_profile_list_prefix.strip("/")],
+    }
+    client_coach_detail_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.client_coach_profile_detail_prefix}/{{{{coach_profile_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.client_coach_profile_detail_prefix.strip("/"), "{{coach_profile_id}}"],
+    }
+    client_coach_avail_date_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.client_coaches_prefix}/{{{{coach_profile_id}}}}{settings.client_availability_prefix}?date={{{{next_monday}}}}&service_id={{{{service_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.client_coaches_prefix.strip("/"), "{{coach_profile_id}}", settings.client_availability_prefix.strip("/")],
+        "query": [
+            {"key": "date", "value": "{{next_monday}}"},
+            {"key": "service_id", "value": "{{service_id}}"},
+        ],
+    }
+    client_coach_avail_month_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.client_coaches_prefix}/{{{{coach_profile_id}}}}{settings.client_availability_prefix}?month={{{{month}}}}&service_id={{{{service_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.client_coaches_prefix.strip("/"), "{{coach_profile_id}}", settings.client_availability_prefix.strip("/")],
+        "query": [
+            {"key": "month", "value": "{{month}}"},
+            {"key": "service_id", "value": "{{service_id}}"},
+        ],
+    }
+    client_coach_reviews_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.client_coaches_prefix}/{{{{coach_profile_id}}}}{settings.client_reviews_prefix}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.client_coaches_prefix.strip("/"), "{{coach_profile_id}}", settings.client_reviews_prefix.strip("/")],
+    }
+    client_service_list_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.user_service_list_prefix}?search=&coach_profile={{{{coach_profile_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.user_service_list_prefix.strip("/")],
+        "query": [
+            {"key": "search", "value": ""},
+            {"key": "coach_profile", "value": "{{coach_profile_id}}"},
+        ],
+    }
+    client_service_detail_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.user_service_detail_prefix}/{{{{service_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.user_service_detail_prefix.strip("/"), "{{service_id}}"],
+    }
+
     collection = {
         "info": {
             "_postman_id": collection_id,
@@ -150,6 +215,21 @@ def build_postman_collection():
             {
                 "key": "product_to_delete_id",
                 "value": "2",
+                "type": "string",
+            },
+            {
+                "key": "coach_profile_id",
+                "value": "1",
+                "type": "string",
+            },
+            {
+                "key": "next_monday",
+                "value": "2026-10-12",
+                "type": "string",
+            },
+            {
+                "key": "month",
+                "value": "2026-10",
                 "type": "string",
             },
         ],
@@ -1885,6 +1965,83 @@ def build_postman_collection():
                                 "data": {"id": 2},
                             },
                         ),
+                    },
+                ],
+            },
+            {
+                "name": "Client - Browse",
+                "item": [
+                    {
+                        "name": "User Category List",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_category_list_url,
+                        },
+                    },
+                    {
+                        "name": "Coach Profile List",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_coach_profile_list_url,
+                        },
+                    },
+                    {
+                        "name": "Recommended Coach Profile List",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_recommended_coaches_url,
+                        },
+                    },
+                    {
+                        "name": "Coach Profile Detail",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_coach_detail_url,
+                        },
+                    },
+                    {
+                        "name": "Coach Availability (Date)",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_coach_avail_date_url,
+                        },
+                    },
+                    {
+                        "name": "Coach Availability (Month)",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_coach_avail_month_url,
+                        },
+                    },
+                    {
+                        "name": "Coach Reviews",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_coach_reviews_url,
+                        },
+                    },
+                    {
+                        "name": "User Service List",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_service_list_url,
+                        },
+                    },
+                    {
+                        "name": "User Service Detail",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_service_detail_url,
+                        },
                     },
                 ],
             },
