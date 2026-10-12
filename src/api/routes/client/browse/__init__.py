@@ -14,6 +14,15 @@ from src.api.routes.client.browse.coach_availability import router as coach_avai
 from src.api.routes.client.browse.coach_reviews import router as coach_reviews_router
 from src.api.routes.client.browse.user_service_list import router as user_service_list_router
 from src.api.routes.client.browse.user_service_detail import router as user_service_detail_router
+from src.api.routes.client.browse.digital_product_list import (
+    router as digital_product_list_router,
+)
+from src.api.routes.client.browse.digital_product_detail import (
+    router as digital_product_detail_router,
+)
+from src.api.routes.client.browse.digital_product_download import (
+    router as digital_product_download_router,
+)
 
 __all__ = [
     "user_category_list_router",
@@ -26,4 +35,8 @@ __all__ = [
     "coach_reviews_router",
     "user_service_list_router",
     "user_service_detail_router",
+    "digital_product_list_router",
+    "digital_product_detail_router",
+    "digital_product_download_router",
 ]
+

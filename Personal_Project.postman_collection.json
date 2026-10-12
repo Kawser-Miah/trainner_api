@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "4cde1761-049a-42da-b13f-d23cdd32c42d",
+    "_postman_id": "d7eca74e-ea0c-4c89-b4f5-40c2763852ce",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2076,6 +2076,108 @@
                 "user",
                 "user-service-detail",
                 "{{service_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Digital Product List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/digital-product-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "digital-product-list"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Digital Product List Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Digital products retrieved successfully.\",\n  \"data\": [\n    {\n      \"id\": 3,\n      \"coach\": {\n        \"id\": 4,\n        \"coach_profile_id\": 1,\n        \"full_name\": \"Sarah Chen\",\n        \"email\": \"coach@coach.test\",\n        \"phone_number\": \"\",\n        \"address\": \"New York, USA\",\n        \"rating\": 5.0,\n        \"review_count\": 1,\n        \"headline\": \"Executive & Startup Coach\",\n        \"profile_photo\": \"http://127.0.0.1:8000/media/coach/profile/sarah.gif\",\n        \"about\": \"I help founders scale.\"\n      },\n      \"category\": 1,\n      \"category_details\": {\n        \"id\": 1,\n        \"name\": \"Business\",\n        \"description\": \"Business coaching\"\n      },\n      \"title\": \"Interview Workbook\",\n      \"description\": \"Practice questions\",\n      \"Thumbnail\": \"http://127.0.0.1:8000/media/coach/products/photo.gif\",\n      \"book_file\": null,\n      \"preview_file\": null,\n      \"price\": \"19.99\",\n      \"is_published\": true,\n      \"is_purchased\": false,\n      \"created_at\": \"2026-03-31T05:32:00.672462Z\",\n      \"updated_at\": \"2026-03-31T05:32:00.672488Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Digital Product Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/digital-product-detail/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "digital-product-detail",
+                "{{product_id}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Digital Product Detail Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Digital product details retrieved successfully.\",\n  \"data\": {\n    \"id\": 3,\n    \"coach\": {\n      \"id\": 4,\n      \"coach_profile_id\": 1,\n      \"full_name\": \"Sarah Chen\",\n      \"email\": \"coach@coach.test\",\n      \"phone_number\": \"\",\n      \"address\": \"New York, USA\",\n      \"rating\": 5.0,\n      \"review_count\": 1,\n      \"headline\": \"Executive & Startup Coach\",\n      \"profile_photo\": \"http://127.0.0.1:8000/media/coach/profile/sarah.gif\",\n      \"about\": \"I help founders scale.\"\n    },\n    \"category\": 1,\n    \"category_details\": {\n      \"id\": 1,\n      \"name\": \"Business\",\n      \"description\": \"Business coaching\"\n    },\n    \"title\": \"Interview Workbook\",\n    \"description\": \"Practice questions\",\n    \"Thumbnail\": \"http://127.0.0.1:8000/media/coach/products/photo.gif\",\n    \"book_file\": null,\n    \"preview_file\": null,\n    \"price\": \"19.99\",\n    \"is_published\": true,\n    \"is_purchased\": false,\n    \"created_at\": \"2026-03-31T05:32:00.672462Z\",\n    \"updated_at\": \"2026-03-31T05:32:00.672488Z\",\n    \"other_products\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Digital Product Download",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/digital-product-download/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "digital-product-download",
+                "{{product_id}}"
               ]
             }
           }

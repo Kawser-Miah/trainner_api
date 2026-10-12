@@ -28,3 +28,4 @@ email-validator
 # Testing
 pytest
 pytest-asyncio
+pypdf

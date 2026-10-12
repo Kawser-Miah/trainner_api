@@ -80,6 +80,9 @@ class Settings(BaseSettings):
     client_reviews_prefix: str = "/reviews"
     user_service_list_prefix: str = "/user-service-list"
     user_service_detail_prefix: str = "/user-service-detail"
+    digital_product_list_prefix: str = "/digital-product-list"
+    digital_product_detail_prefix: str = "/digital-product-detail"
+    digital_product_download_prefix: str = "/digital-product-download"
 
 
 

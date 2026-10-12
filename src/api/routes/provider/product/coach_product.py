@@ -268,16 +268,6 @@ download_router = APIRouter(
     include_in_schema=False,
     response_class=FileResponse,
 )
-@download_router.get(
-    "/user/digital-product-download/{product_id}",
-    include_in_schema=False,
-    response_class=FileResponse,
-)
-@download_router.get(
-    "/user/digital-product-download/{product_id}/",
-    include_in_schema=False,
-    response_class=FileResponse,
-)
 async def download_product_file(
     product_id: int,
     db: Session = Depends(get_db),

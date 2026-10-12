@@ -1,5 +1,7 @@
 import io
+from pathlib import Path
 import pytest
+from pypdf import PdfWriter, PdfReader
 from starlette.testclient import TestClient
 from sqlalchemy import select
 
@@ -207,3 +209,51 @@ def test_create_and_manage_product(test_coach_and_category, coach_headers, db_se
         headers=coach_headers,
     )
     assert get_again.status_code == 404
+
+
+def test_product_creation_auto_generates_preview_and_page_counts(test_coach_and_category, coach_headers):
+    coach, profile, category = test_coach_and_category
+    client = TestClient(app)
+
+    # Create a real 4-page PDF in-memory
+    writer = PdfWriter()
+    for _ in range(4):
+        writer.add_blank_page(width=200, height=200)
+    pdf_buf = io.BytesIO()
+    writer.write(pdf_buf)
+    pdf_bytes = pdf_buf.getvalue()
+
+    fake_pdf = io.BytesIO(pdf_bytes)
+    fake_pdf.name = "sample_book.pdf"
+
+    create_data = {
+        "title": "Auto Preview Book",
+        "description": "Book with automatic preview",
+        "category": str(category.id),
+        "price": "35.00",
+        "status": "published",
+    }
+    files = {
+        "book_file": ("sample_book.pdf", fake_pdf, "application/pdf"),
+    }
+
+    resp = client.post(
+        "/api/Provider/products/create",
+        data=create_data,
+        files=files,
+        headers=coach_headers,
+    )
+    assert resp.status_code == 201, resp.text
+    data = resp.json()["data"]
+    assert data["page_count"] == 4
+    assert data["preview_page_count"] == 2
+    assert data["preview_file"] is not None
+
+    # Check the preview file on disk actually has 2 pages
+    preview_url = data["preview_file"]
+    rel_preview_path = preview_url.split("/media/", 1)[-1]
+    disk_path = Path("media") / rel_preview_path
+    assert disk_path.exists()
+    reader = PdfReader(str(disk_path))
+    assert len(reader.pages) == 2
+

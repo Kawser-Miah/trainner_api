@@ -18,6 +18,9 @@ class ClientServiceProviderDetails(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+ProviderSummaryResponse = ClientServiceProviderDetails
+
+
 class ClientServiceCategory(BaseModel):
     id: int
     name: str

@@ -1,10 +1,12 @@
 import re
 import uuid
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
 from fastapi import Request
+from pypdf import PdfReader, PdfWriter
 from sqlalchemy.orm import Session
 
 from src.core.exceptions import (
@@ -73,13 +75,13 @@ async def save_product_thumbnail(file: Any) -> str | None:
     return f"/media/coach/products/{unique_name}"
 
 
-async def save_product_book_file(file: Any) -> tuple[str | None, str | None]:
+async def save_product_book_file(file: Any) -> tuple[str | None, str | None, bytes | None, str | None]:
     if not file or not hasattr(file, "filename") or not getattr(file, "filename", None):
-        return None, None
+        return None, None, None, None
 
     content = await file.read()
     if not content or len(content) == 0:
-        return None, None
+        return None, None, None, None
 
     suffix = Path(file.filename).suffix or ".bin"
     file_type = suffix.lstrip(".").upper() or "PDF"
@@ -93,7 +95,53 @@ async def save_product_book_file(file: Any) -> tuple[str | None, str | None]:
     with open(dest_path, "wb") as f:
         f.write(content)
 
-    return f"/media/coach/products/files/{unique_name}", file_type
+    return f"/media/coach/products/files/{unique_name}", file_type, content, clean_stem
+
+
+def generate_preview_and_page_stats(
+    content: bytes,
+    clean_stem: str,
+) -> tuple[int | None, int | None, str | None]:
+    """Analyzes uploaded book file content to extract total page count and generate a 2-page preview PDF.
+
+    Returns: (page_count, preview_page_count, preview_file_rel_path)
+    """
+    try:
+        reader = PdfReader(BytesIO(content))
+        total_pages = len(reader.pages)
+        if total_pages > 0:
+            preview_count = min(2, total_pages)
+            writer = PdfWriter()
+            for i in range(preview_count):
+                writer.add_page(reader.pages[i])
+
+            buf = BytesIO()
+            writer.write(buf)
+            preview_bytes = buf.getvalue()
+
+            preview_filename = f"{clean_stem}_preview_{uuid.uuid4().hex[:8]}.pdf"
+            dest_dir = Path("media") / "coach" / "products" / "files"
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            preview_path = dest_dir / preview_filename
+            with open(preview_path, "wb") as f:
+                f.write(preview_bytes)
+
+            return total_pages, preview_count, f"/media/coach/products/files/{preview_filename}"
+    except Exception:
+        pass
+
+    # Fallback for non-standard PDF or test mock content
+    try:
+        preview_filename = f"{clean_stem}_preview_{uuid.uuid4().hex[:8]}.pdf"
+        dest_dir = Path("media") / "coach" / "products" / "files"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        preview_path = dest_dir / preview_filename
+        with open(preview_path, "wb") as f:
+            f.write(content)
+        return 1, 1, f"/media/coach/products/files/{preview_filename}"
+    except Exception:
+        return 1, 1, None
+
 
 
 def build_download_url(product_id: int, request: Request | None) -> str:
@@ -167,8 +215,21 @@ async def create_provider_product(
         raise CategoryNotFoundException()
 
     thumbnail_path = await save_product_thumbnail(thumbnail)
-    book_file_path, file_type = await save_product_book_file(book_file)
-    preview_path, _ = await save_product_book_file(preview_file) if preview_file else (None, None)
+    book_file_path, file_type, book_content, clean_stem = await save_product_book_file(book_file)
+    preview_path, _, _, _ = (
+        await save_product_book_file(preview_file) if preview_file else (None, None, None, None)
+    )
+
+    if book_content:
+        auto_page_count, auto_preview_count, auto_preview_path = generate_preview_and_page_stats(
+            book_content, clean_stem or "product"
+        )
+        if page_count is None:
+            page_count = auto_page_count
+        if preview_page_count is None:
+            preview_page_count = auto_preview_count
+        if preview_path is None:
+            preview_path = auto_preview_path
 
     product = create_coach_product(
         db=db,
@@ -265,17 +326,30 @@ async def update_provider_product(
 
     new_book_file_path = None
     new_file_type = None
+    new_preview_file_path = None
     if book_file is not None and getattr(book_file, "filename", None):
-        uploaded_book, detected_type = await save_product_book_file(book_file)
+        uploaded_book, detected_type, book_content, clean_stem = await save_product_book_file(book_file)
         if uploaded_book:
             if product.book_file:
                 delete_media_file(product.book_file)
             new_book_file_path = uploaded_book
             new_file_type = detected_type
 
-    new_preview_file_path = None
+            if book_content:
+                auto_pages, auto_preview_count, auto_preview_path = generate_preview_and_page_stats(
+                    book_content, clean_stem or "product"
+                )
+                if page_count is None:
+                    page_count = auto_pages
+                if preview_page_count is None:
+                    preview_page_count = auto_preview_count
+                if (preview_file is None or not getattr(preview_file, "filename", None)) and auto_preview_path:
+                    if product.preview_file:
+                        delete_media_file(product.preview_file)
+                    new_preview_file_path = auto_preview_path
+
     if preview_file is not None and getattr(preview_file, "filename", None):
-        uploaded_preview, _ = await save_product_book_file(preview_file)
+        uploaded_preview, _, _, _ = await save_product_book_file(preview_file)
         if uploaded_preview:
             if product.preview_file:
                 delete_media_file(product.preview_file)

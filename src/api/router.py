@@ -35,6 +35,9 @@ from src.api.routes.client.browse import (
     coach_reviews_router,
     user_service_list_router,
     user_service_detail_router,
+    digital_product_list_router,
+    digital_product_detail_router,
+    digital_product_download_router,
 )
 
 
@@ -79,6 +82,10 @@ api_router.include_router(coach_availability_month_router, prefix=settings.clien
 api_router.include_router(coach_reviews_router, prefix=settings.client_prefix)
 api_router.include_router(user_service_list_router, prefix=settings.client_prefix)
 api_router.include_router(user_service_detail_router, prefix=settings.client_prefix)
+api_router.include_router(digital_product_list_router, prefix=settings.client_prefix)
+api_router.include_router(digital_product_detail_router, prefix=settings.client_prefix)
+api_router.include_router(digital_product_download_router, prefix=settings.client_prefix)
+
 
 
 

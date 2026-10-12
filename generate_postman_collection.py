@@ -148,6 +148,22 @@ def build_postman_collection():
         "host": ["{{base_url}}"],
         "path": [c_prefix, settings.user_service_detail_prefix.strip("/"), "{{service_id}}"],
     }
+    client_digital_product_list_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.digital_product_list_prefix}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.digital_product_list_prefix.strip("/")],
+    }
+    client_digital_product_detail_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.digital_product_detail_prefix}/{{{{product_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.digital_product_detail_prefix.strip("/"), "{{product_id}}"],
+    }
+    client_digital_product_download_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.digital_product_download_prefix}/{{{{product_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.digital_product_download_prefix.strip("/"), "{{product_id}}"],
+    }
+
 
     collection = {
         "info": {
@@ -2043,7 +2059,117 @@ def build_postman_collection():
                             "url": client_service_detail_url,
                         },
                     },
+                    {
+                        "name": "Digital Product List",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_digital_product_list_url,
+                        },
+                        "response": make_response_example(
+                            "Digital Product List Success",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Digital products retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 3,
+                                        "coach": {
+                                            "id": 4,
+                                            "coach_profile_id": 1,
+                                            "full_name": "Sarah Chen",
+                                            "email": "coach@coach.test",
+                                            "phone_number": "",
+                                            "address": "New York, USA",
+                                            "rating": 5.0,
+                                            "review_count": 1,
+                                            "headline": "Executive & Startup Coach",
+                                            "profile_photo": "http://127.0.0.1:8000/media/coach/profile/sarah.gif",
+                                            "about": "I help founders scale.",
+                                        },
+                                        "category": 1,
+                                        "category_details": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "title": "Interview Workbook",
+                                        "description": "Practice questions",
+                                        "Thumbnail": "http://127.0.0.1:8000/media/coach/products/photo.gif",
+                                        "book_file": None,
+                                        "preview_file": None,
+                                        "price": "19.99",
+                                        "is_published": True,
+                                        "is_purchased": False,
+                                        "created_at": "2026-03-31T05:32:00.672462Z",
+                                        "updated_at": "2026-03-31T05:32:00.672488Z",
+                                    }
+                                ],
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Digital Product Detail",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_digital_product_detail_url,
+                        },
+                        "response": make_response_example(
+                            "Digital Product Detail Success",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Digital product details retrieved successfully.",
+                                "data": {
+                                    "id": 3,
+                                    "coach": {
+                                        "id": 4,
+                                        "coach_profile_id": 1,
+                                        "full_name": "Sarah Chen",
+                                        "email": "coach@coach.test",
+                                        "phone_number": "",
+                                        "address": "New York, USA",
+                                        "rating": 5.0,
+                                        "review_count": 1,
+                                        "headline": "Executive & Startup Coach",
+                                        "profile_photo": "http://127.0.0.1:8000/media/coach/profile/sarah.gif",
+                                        "about": "I help founders scale.",
+                                    },
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "Interview Workbook",
+                                    "description": "Practice questions",
+                                    "Thumbnail": "http://127.0.0.1:8000/media/coach/products/photo.gif",
+                                    "book_file": None,
+                                    "preview_file": None,
+                                    "price": "19.99",
+                                    "is_published": True,
+                                    "is_purchased": False,
+                                    "created_at": "2026-03-31T05:32:00.672462Z",
+                                    "updated_at": "2026-03-31T05:32:00.672488Z",
+                                    "other_products": [],
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Digital Product Download",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_digital_product_download_url,
+                        },
+                    },
                 ],
+
             },
         ],
     }

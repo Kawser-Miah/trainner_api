@@ -56,3 +56,46 @@ def calculate_starting_price(services: list) -> str | None:
     if not published_prices:
         return None
     return f"{min(published_prices):.2f}"
+
+
+def format_digital_product_dict(
+    product,
+    is_purchased: bool,
+    request: Request | None = None,
+) -> dict:
+    coach_profile = product.coach_profile
+    category = product.category
+    coach_dict = get_coach_provider_details(coach_profile, request) if coach_profile else {}
+
+    thumbnail_url = build_media_url(product.thumbnail, request) if product.thumbnail else None
+    preview_file_url = build_media_url(product.preview_file, request) if product.preview_file else None
+
+    book_file_url = None
+    if is_purchased:
+        base_url = str(request.base_url).rstrip("/") if request else "http://localhost:8000"
+        book_file_url = f"{base_url}/user/digital-product-download/{product.id}/"
+
+    return {
+        "id": product.id,
+        "coach": coach_dict,
+        "category": product.category_id,
+        "category_details": {
+            "id": category.id if category else product.category_id,
+            "name": category.name if category else "",
+            "description": category.description if category else "",
+        },
+        "title": product.title,
+        "description": product.description,
+        "Thumbnail": thumbnail_url,
+        "book_file": book_file_url,
+        "preview_file": preview_file_url,
+        "page_count": product.page_count,
+        "preview_page_count": product.preview_page_count,
+        "file_type": product.file_type or "PDF",
+        "is_purchased": is_purchased,
+        "is_published": product.status == "published",
+        "price": f"{float(product.price):.2f}" if product.price else "0.00",
+        "status": product.status,
+        "created_at": format_iso_datetime(product.created_at),
+        "updated_at": format_iso_datetime(product.updated_at),
+    }

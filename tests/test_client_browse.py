@@ -2,13 +2,19 @@ import pytest
 from starlette.testclient import TestClient
 from sqlalchemy import select
 
+from io import BytesIO
+from pathlib import Path
+from pypdf import PdfWriter, PdfReader
+from pypdf.generic import DecodedStreamObject, NameObject, DictionaryObject
 from src.main import app
 from src.core.database import SessionLocal
 from src.models.accounts.user import User
+from src.models.client.product_purchase import ProductPurchase
 from src.models.provider.category import Category
 from src.models.provider.coach_profile import CoachProfile
 from src.models.provider.coach_profile.coach_availability import CoachAvailability
 from src.models.provider.coach_profile.coach_review import CoachReview
+from src.models.provider.product.coach_product import CoachProduct
 from src.models.provider.service.coach_service import CoachService, CoachServiceBenefit
 from src.utils.jwt import create_access_token
 
@@ -263,5 +269,212 @@ def test_user_service_list_and_detail(client, client_headers, seed_coach_data):
 def test_client_endpoints_require_client_role(client, seed_coach_data):
     prof_id = seed_coach_data["profile"].id
     # No auth header -> 400 / 401
-    res = client.get("/user/user-category-list")
-    assert res.status_code in [400, 401, 403]
+    res1 = client.get("/user/user-category-list")
+    assert res1.status_code in [400, 401, 403]
+    res2 = client.get("/user/digital-product-list")
+    assert res2.status_code in [400, 401, 403]
+    res3 = client.get("/user/digital-product-detail/1")
+    assert res3.status_code in [400, 401, 403]
+    res4 = client.get("/user/digital-product-download/1")
+    assert res4.status_code in [400, 401, 403]
+
+
+def generate_sample_rich_pdf(file_path: Path):
+    writer = PdfWriter()
+    pages_data = [
+        ("Interview Workbook - Page 1", ["Executive Preparation Guide", "Author: Sarah Chen", "Category: Business Coaching", "Preview Page 1 of 2"]),
+        ("Interview Workbook - Page 2", ["Chapter 1: Strategy Frameworks", "STAR-L Method and Leadership Principles", "End of Preview - Purchase full book for Chapters 2-4"]),
+        ("Interview Workbook - Page 3", ["Chapter 2: Strategic System Design", "Full Version Unlocked Content"]),
+        ("Interview Workbook - Page 4", ["Chapter 3: Final Assessment", "Full Version Unlocked Content"]),
+    ]
+    for title, lines in pages_data:
+        page = writer.add_blank_page(width=612, height=792)
+        stream_cmds = ["BT", "/F1 20 Tf", "50 720 Td", f"({title}) Tj"]
+        y = 670
+        for line in lines:
+            safe_line = line.replace("(", "[").replace(")", "]")
+            stream_cmds.extend(["/F1 12 Tf", f"50 {y} Td", f"({safe_line}) Tj"])
+            y -= 30
+        stream_cmds.append("ET")
+
+        content_stream = " ".join(stream_cmds).encode("latin1")
+        stream_obj = DecodedStreamObject()
+        stream_obj.set_data(content_stream)
+        stream_ref = writer._add_object(stream_obj)
+        page[NameObject("/Contents")] = stream_ref
+
+        font_dict = DictionaryObject({
+            NameObject("/Type"): NameObject("/Font"),
+            NameObject("/Subtype"): NameObject("/Type1"),
+            NameObject("/BaseFont"): NameObject("/Helvetica"),
+        })
+        font_ref = writer._add_object(font_dict)
+        page[NameObject("/Resources")] = DictionaryObject({
+            NameObject("/Font"): DictionaryObject({
+                NameObject("/F1"): font_ref
+            })
+        })
+    with open(file_path, "wb") as f:
+        writer.write(f)
+
+
+@pytest.fixture
+def seed_digital_product_data(db_session, seed_coach_data):
+    profile = seed_coach_data["profile"]
+    cat = profile.categories[0] if profile.categories else None
+
+    # Generate a rich 4-page PDF file with actual text
+    pdf_dir = Path("media/test_files")
+    pdf_dir.mkdir(parents=True, exist_ok=True)
+    pdf_path = pdf_dir / "test_4page_book.pdf"
+    preview_path = pdf_dir / "test_4page_preview.pdf"
+
+    generate_sample_rich_pdf(pdf_path)
+
+    # Generate 2-page preview with real text
+    reader = PdfReader(str(pdf_path))
+    writer_prev = PdfWriter()
+    writer_prev.add_page(reader.pages[0])
+    writer_prev.add_page(reader.pages[1])
+    with open(preview_path, "wb") as f:
+        writer_prev.write(f)
+
+    # Main product
+    prod = db_session.execute(
+        select(CoachProduct).where(
+            CoachProduct.title == "Interview Workbook",
+            CoachProduct.coach_profile_id == profile.id,
+        )
+    ).scalars().first()
+    if not prod:
+        prod = CoachProduct(
+            coach_profile_id=profile.id,
+            category_id=cat.id if cat else None,
+            title="Interview Workbook",
+            description="Practice questions",
+            price="19.99",
+            book_file=str(pdf_path).replace("\\", "/"),
+            preview_file=str(preview_path).replace("\\", "/"),
+            page_count=4,
+            preview_page_count=2,
+            status="published",
+        )
+        db_session.add(prod)
+        db_session.commit()
+        db_session.refresh(prod)
+    else:
+        prod.book_file = str(pdf_path).replace("\\", "/")
+        prod.preview_file = str(preview_path).replace("\\", "/")
+        prod.page_count = 4
+        prod.preview_page_count = 2
+        prod.status = "published"
+        db_session.commit()
+        db_session.refresh(prod)
+
+    # Other product from same coach
+    other_prod = db_session.execute(
+        select(CoachProduct).where(
+            CoachProduct.title == "Leadership Roadmap",
+            CoachProduct.coach_profile_id == profile.id,
+        )
+    ).scalars().first()
+    if not other_prod:
+        other_prod = CoachProduct(
+            coach_profile_id=profile.id,
+            category_id=cat.id if cat else None,
+            title="Leadership Roadmap",
+            description="Step-by-step guide",
+            price="29.99",
+            status="published",
+        )
+        db_session.add(other_prod)
+        db_session.commit()
+        db_session.refresh(other_prod)
+    else:
+        other_prod.coach_profile_id = profile.id
+        other_prod.status = "published"
+        db_session.commit()
+        db_session.refresh(other_prod)
+
+    return {"product": prod, "other_product": other_prod, "pdf_path": pdf_path}
+
+
+def test_digital_product_list(client, client_headers, seed_digital_product_data):
+    prod = seed_digital_product_data["product"]
+    res = client.get("/user/digital-product-list", headers=client_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["message"] == "Digital products retrieved successfully."
+    assert len(data["data"]) > 0
+    item = next(p for p in data["data"] if p["id"] == prod.id)
+    assert item["title"] == "Interview Workbook"
+    assert item["is_purchased"] is False
+    assert item["book_file"] is None
+    assert "coach" in item
+    assert "category_details" in item
+
+
+def test_digital_product_detail(client, client_headers, seed_digital_product_data):
+    prod = seed_digital_product_data["product"]
+    res = client.get(f"/user/digital-product-detail/{prod.id}", headers=client_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["message"] == "Digital product details retrieved successfully."
+    assert data["data"]["id"] == prod.id
+    assert data["data"]["is_purchased"] is False
+    assert data["data"]["book_file"] is None
+    assert "other_products" in data["data"]
+    assert any(op["title"] == "Leadership Roadmap" for op in data["data"]["other_products"])
+
+
+def test_digital_product_download_preview_and_purchased(
+    client, client_user, client_headers, db_session, seed_digital_product_data
+):
+    prod = seed_digital_product_data["product"]
+
+    # Ensure no existing purchase for client_user
+    db_session.query(ProductPurchase).filter(
+        ProductPurchase.user_id == client_user.id,
+        ProductPurchase.product_id == prod.id,
+    ).delete()
+    db_session.commit()
+
+    # 1. Unpurchased user -> 2-page preview
+    res_preview = client.get(f"/user/digital-product-download/{prod.id}", headers=client_headers)
+    assert res_preview.status_code == 200
+    assert "receipt.pdf" in res_preview.headers.get("content-disposition", "")
+    assert res_preview.headers.get("content-type") == "application/pdf"
+
+    # Check page count of preview is min(2, total_pages) = 2
+    reader_preview = PdfReader(BytesIO(res_preview.content))
+    assert len(reader_preview.pages) == 2
+    assert "Interview Workbook - Page 1" in reader_preview.pages[0].extract_text()
+    assert "Interview Workbook - Page 2" in reader_preview.pages[1].extract_text()
+
+    # 2. Add purchase record for client_user
+    purchase = ProductPurchase(user_id=client_user.id, product_id=prod.id)
+    db_session.add(purchase)
+    db_session.commit()
+
+    # 3. Purchased user -> full 4 pages
+    res_full = client.get(f"/user/digital-product-download/{prod.id}", headers=client_headers)
+    assert res_full.status_code == 200
+    assert "receipt.pdf" in res_full.headers.get("content-disposition", "")
+    reader_full = PdfReader(BytesIO(res_full.content))
+    assert len(reader_full.pages) == 4
+    assert "Interview Workbook - Page 1" in reader_full.pages[0].extract_text()
+    assert "Interview Workbook - Page 4" in reader_full.pages[3].extract_text()
+
+    # 4. Detail should now show is_purchased=True and book_file download link
+    res_detail = client.get(f"/user/digital-product-detail/{prod.id}", headers=client_headers)
+    assert res_detail.status_code == 200
+    detail_data = res_detail.json()
+    assert detail_data["data"]["is_purchased"] is True
+    assert detail_data["data"]["book_file"] is not None
+
+    # Clean up purchase
+    db_session.delete(purchase)
+    db_session.commit()
+

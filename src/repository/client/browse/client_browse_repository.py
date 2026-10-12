@@ -183,3 +183,101 @@ def get_browse_coach_availability(
 ) -> CoachAvailability | None:
     query = select(CoachAvailability).where(CoachAvailability.coach_profile_id == coach_profile_id)
     return db.execute(query).scalar_one_or_none()
+
+
+def is_product_purchased_by_user(
+    db: Session,
+    user_id: int,
+    product: CoachProduct,
+) -> bool:
+    from src.models.client.product_purchase import ProductPurchase
+
+    if product.coach_profile and product.coach_profile.user_id == user_id:
+        return True
+
+    query = select(ProductPurchase).where(
+        ProductPurchase.user_id == user_id,
+        ProductPurchase.product_id == product.id,
+    )
+    return db.execute(query).scalar_one_or_none() is not None
+
+
+def get_browse_digital_products(
+    db: Session,
+    coach_profile_id: int | None = None,
+    category_id: int | None = None,
+    search: str | None = None,
+    status: str = "published",
+) -> list[CoachProduct]:
+    query = (
+        select(CoachProduct)
+        .join(CoachProduct.coach_profile)
+        .join(CoachProfile.user)
+        .options(
+            selectinload(CoachProduct.coach_profile).selectinload(CoachProfile.user),
+            selectinload(CoachProduct.category),
+        )
+    )
+
+    if status:
+        query = query.where(CoachProduct.status == status)
+
+    if coach_profile_id is not None:
+        query = query.where(CoachProduct.coach_profile_id == coach_profile_id)
+
+    if category_id is not None:
+        query = query.where(CoachProduct.category_id == category_id)
+
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                CoachProduct.title.ilike(term),
+                CoachProduct.description.ilike(term),
+                User.full_name.ilike(term),
+            )
+        )
+
+    query = query.order_by(CoachProduct.id.asc())
+    return list(db.execute(query).scalars().all())
+
+
+def get_browse_digital_product_detail(
+    db: Session,
+    product_id: int,
+) -> CoachProduct | None:
+    query = (
+        select(CoachProduct)
+        .where(CoachProduct.id == product_id)
+        .options(
+            selectinload(CoachProduct.coach_profile).selectinload(CoachProfile.user),
+            selectinload(CoachProduct.category),
+        )
+    )
+    return db.execute(query).scalar_one_or_none()
+
+
+def get_browse_other_products(
+    db: Session,
+    coach_profile_id: int,
+    exclude_product_id: int,
+    status: str = "published",
+) -> list[CoachProduct]:
+    query = (
+        select(CoachProduct)
+        .join(CoachProduct.coach_profile)
+        .join(CoachProfile.user)
+        .where(
+            CoachProduct.coach_profile_id == coach_profile_id,
+            CoachProduct.id != exclude_product_id,
+        )
+        .options(
+            selectinload(CoachProduct.coach_profile).selectinload(CoachProfile.user),
+            selectinload(CoachProduct.category),
+        )
+    )
+    if status:
+        query = query.where(CoachProduct.status == status)
+
+    query = query.order_by(CoachProduct.id.asc())
+    return list(db.execute(query).scalars().all())
