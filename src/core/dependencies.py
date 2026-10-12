@@ -96,3 +96,23 @@ def require_approved_coach(
     return current_user
 
 
+def require_client_role(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """
+    Ensure the authenticated user has a client role (USER or CLIENT).
+    Raises 403 Forbidden if the user is not a client.
+    """
+    role = (current_user.role or "").strip().upper()
+    if role not in ["USER", "CLIENT"]:
+        raise ForbiddenRoleException(
+            message="Access denied. This service is restricted to clients only."
+        )
+
+    return current_user
+
+
+# Alias for convenience
+require_user_role = require_client_role
+
+

@@ -5,7 +5,7 @@ from starlette.testclient import TestClient
 from src.main import app
 from src.core.common_responses import CommonResponse
 from src.core.database import SessionLocal
-from src.core.dependencies import require_approved_coach, require_provider_role
+from src.core.dependencies import require_approved_coach, require_client_role, require_provider_role
 from src.models.accounts.user import User
 from src.utils.jwt import create_access_token
 
@@ -20,6 +20,16 @@ async def check_operational_route(user: User = Depends(require_approved_coach)):
         status=status.HTTP_200_OK,
         message="Operational access granted",
         data={"user_id": str(user.id), "coach_status": user.coach_status},
+    )
+
+
+@dummy_router.get("/client-only", response_model=CommonResponse)
+async def check_client_route(user: User = Depends(require_client_role)):
+    return CommonResponse(
+        success=True,
+        status=status.HTTP_200_OK,
+        message="Client access granted",
+        data={"user_id": str(user.id), "role": user.role},
     )
 
 
@@ -96,3 +106,60 @@ def test_approved_coach_allowed_on_operational_route(db):
     # Cleanup
     db.delete(user)
     db.commit()
+
+
+def test_client_role_allowed_on_client_route(db):
+    client = TestClient(app)
+
+    user = User(
+        full_name="Regular Client",
+        email="client_user@example.com",
+        password_hash="hashed_pw",
+        role="USER",
+        is_email_verified=True,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    token, _ = create_access_token(user.id, user.role, user.full_name)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = client.get("/test-access/client-only", headers=headers)
+    assert response.status_code == 200, response.text
+    res_data = response.json()
+    assert res_data["success"] is True
+    assert res_data["data"]["role"] == "USER"
+
+    db.delete(user)
+    db.commit()
+
+
+def test_coach_role_blocked_from_client_route(db):
+    client = TestClient(app)
+
+    user = User(
+        full_name="Coach Attempting Client",
+        email="coach_attempt_client@example.com",
+        password_hash="hashed_pw",
+        role="COACH",
+        is_email_verified=True,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    token, _ = create_access_token(user.id, user.role, user.full_name)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = client.get("/test-access/client-only", headers=headers)
+    assert response.status_code == 403, response.text
+    res_data = response.json()
+    assert res_data["success"] is False
+    assert res_data["error"] == "FORBIDDEN_ROLE"
+
+    db.delete(user)
+    db.commit()
+
