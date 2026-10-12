@@ -29,6 +29,9 @@ from src.api.routes.client.browse.user_blog_list import (
 from src.api.routes.client.browse.user_blog_detail import (
     router as user_blog_detail_router,
 )
+from src.api.routes.client.browse.app_rating import (
+    router as app_rating_router,
+)
 
 __all__ = [
     "user_category_list_router",
@@ -46,6 +49,7 @@ __all__ = [
     "digital_product_download_router",
     "user_blog_list_router",
     "user_blog_detail_router",
+    "app_rating_router",
 ]
 
 

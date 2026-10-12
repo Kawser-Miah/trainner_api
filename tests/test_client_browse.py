@@ -282,6 +282,12 @@ def test_client_endpoints_require_client_role(client, seed_coach_data):
     assert res5.status_code in [400, 401, 403]
     res6 = client.get("/user/blog-detail/1")
     assert res6.status_code in [400, 401, 403]
+    res7 = client.get("/user/app-rating")
+    assert res7.status_code in [400, 401, 403]
+    res8 = client.post("/user/app-rating", json={"rating": 5, "review": "test"})
+    assert res8.status_code in [400, 401, 403]
+    res9 = client.get("/user/app-ratings-list")
+    assert res9.status_code in [400, 401, 403]
 
 
 
@@ -562,5 +568,82 @@ def test_user_blog_detail(client, client_headers, seed_blog_data):
     # 2. Non-existent blog -> 404
     res_404 = client.get("/user/blog-detail/999999", headers=client_headers)
     assert res_404.status_code == 404
+
+
+def test_app_ratings_flow(client, client_user, client_headers, db_session):
+    from src.models.client.app_rating import AppRating
+
+    # 1. Clean up any existing rating for client_user
+    db_session.query(AppRating).filter(AppRating.user_id == client_user.id).delete()
+    db_session.commit()
+
+    # 2. Get initial stats -> has_rated=False, user_rating=None
+    res_stats_init = client.get("/user/app-rating", headers=client_headers)
+    assert res_stats_init.status_code == 200
+    init_data = res_stats_init.json()
+    assert init_data["success"] is True
+    assert init_data["status"] == 200
+    assert init_data["message"] == "App rating stats retrieved successfully."
+    assert init_data["data"]["has_rated"] is False
+    assert init_data["data"]["user_rating"] is None
+
+    # 3. Submit app rating (POST)
+    res_post = client.post(
+        "/user/app-rating",
+        json={"rating": 5, "review": "Great app!"},
+        headers=client_headers,
+    )
+    assert res_post.status_code == 201
+    post_data = res_post.json()
+    assert post_data["success"] is True
+    assert post_data["status"] == 201
+    assert post_data["message"] == "App rating submitted successfully."
+    rating_item = post_data["data"]
+    assert rating_item["user"] == client_user.id
+    assert rating_item["user_name"] == client_user.full_name
+    assert rating_item["rating"] == 5
+    assert rating_item["review"] == "Great app!"
+    assert "created_at" in rating_item
+    assert "updated_at" in rating_item
+
+    # 4. Get stats after rating -> has_rated=True, user_rating=5, total_ratings >= 1
+    res_stats_after = client.get("/user/app-rating", headers=client_headers)
+    assert res_stats_after.status_code == 200
+    after_data = res_stats_after.json()
+    assert after_data["data"]["has_rated"] is True
+    assert after_data["data"]["user_rating"] == 5
+    assert after_data["data"]["total_ratings"] >= 1
+    assert after_data["data"]["average_rating"] > 0
+
+    # 5. Get ratings list -> contains this rating
+    res_list = client.get("/user/app-ratings-list", headers=client_headers)
+    assert res_list.status_code == 200
+    list_data = res_list.json()
+    assert list_data["success"] is True
+    assert list_data["status"] == 200
+    assert list_data["message"] == "App ratings retrieved successfully."
+    assert isinstance(list_data["data"], list)
+    user_item = next(r for r in list_data["data"] if r["id"] == rating_item["id"])
+    assert user_item["user"] == client_user.id
+    assert user_item["user_name"] == client_user.full_name
+    assert user_item["rating"] == 5
+    assert user_item["review"] == "Great app!"
+    assert "image" in user_item
+
+    # 6. Update rating by posting again
+    res_update = client.post(
+        "/user/app-rating",
+        json={"rating": 4, "review": "Updated review text"},
+        headers=client_headers,
+    )
+    assert res_update.status_code == 201
+    update_data = res_update.json()
+    assert update_data["data"]["id"] == rating_item["id"]
+    assert update_data["data"]["rating"] == 4
+    assert update_data["data"]["review"] == "Updated review text"
+
+    # Clean up
+    db_session.query(AppRating).filter(AppRating.user_id == client_user.id).delete()
+    db_session.commit()
 
 

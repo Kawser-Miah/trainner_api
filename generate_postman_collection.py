@@ -176,6 +176,16 @@ def build_postman_collection():
         "host": ["{{base_url}}"],
         "path": [c_prefix, settings.user_blog_detail_prefix.strip("/"), "{{blog_id}}"],
     }
+    client_app_rating_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.app_rating_prefix}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.app_rating_prefix.strip("/")],
+    }
+    client_app_ratings_list_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.app_ratings_list_prefix}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.app_ratings_list_prefix.strip("/")],
+    }
 
 
 
@@ -2277,10 +2287,98 @@ def build_postman_collection():
                             },
                         ),
                     },
+                    {
+                        "name": "Get App Rating Stats",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_app_rating_url,
+                        },
+                        "response": make_response_example(
+                            "Get App Rating Stats Success",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "App rating stats retrieved successfully.",
+                                "data": {
+                                    "average_rating": 0,
+                                    "total_ratings": 0,
+                                    "has_rated": False,
+                                    "user_rating": None,
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Submit App Rating",
+                        "request": {
+                            "method": "POST",
+                            "header": [
+                                {"key": "Authorization", "value": "Bearer {{access_token}}"},
+                                {"key": "Content-Type", "value": "application/json"},
+                            ],
+                            "body": {
+                                "mode": "raw",
+                                "raw": json.dumps(
+                                    {
+                                        "rating": 5,
+                                        "review": "Great app!",
+                                    },
+                                    indent=2,
+                                ),
+                            },
+                            "url": client_app_rating_url,
+                        },
+                        "response": make_response_example(
+                            "Submit App Rating Success",
+                            201,
+                            {
+                                "success": True,
+                                "status": 201,
+                                "message": "App rating submitted successfully.",
+                                "data": {
+                                    "id": 1,
+                                    "user": 2,
+                                    "user_name": "Thomas Client Jr.",
+                                    "rating": 5,
+                                    "review": "Great app!",
+                                    "created_at": "2026-09-30T05:36:52.330371Z",
+                                    "updated_at": "2026-09-30T05:36:52.330371Z",
+                                },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Get App Ratings List",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_app_ratings_list_url,
+                        },
+                        "response": make_response_example(
+                            "Get App Ratings List Success",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "App ratings retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 1,
+                                        "user": 2,
+                                        "user_name": "Thomas Client Jr.",
+                                        "image": "https://4234cwc7-8004.inc1.devtunnels.ms/media/profile_images/photo.gif",
+                                        "rating": 5,
+                                        "review": "Great app!",
+                                        "created_at": "2026-09-30T05:36:52.330371Z",
+                                        "updated_at": "2026-09-30T05:36:52.330371Z",
+                                    }
+                                ],
+                            },
+                        ),
+                    },
                 ],
-
-
-
             },
         ],
     }

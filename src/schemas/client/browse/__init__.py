@@ -24,6 +24,12 @@ from src.schemas.client.browse.blog_schemas import (
     UserBlogItemResponse,
     UserBlogCategoryDetails,
 )
+from src.schemas.client.browse.app_rating_schemas import (
+    AppRatingCreateRequest,
+    AppRatingStatsResponse,
+    AppRatingItemResponse,
+    AppRatingListItemResponse,
+)
 
 __all__ = [
     "UserCategoryItemResponse",
@@ -40,5 +46,9 @@ __all__ = [
     "DigitalProductDetailResponse",
     "UserBlogItemResponse",
     "UserBlogCategoryDetails",
+    "AppRatingCreateRequest",
+    "AppRatingStatsResponse",
+    "AppRatingItemResponse",
+    "AppRatingListItemResponse",
 ]
 

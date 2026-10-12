@@ -40,6 +40,7 @@ from src.api.routes.client.browse import (
     digital_product_download_router,
     user_blog_list_router,
     user_blog_detail_router,
+    app_rating_router,
 )
 
 
@@ -89,6 +90,7 @@ api_router.include_router(digital_product_detail_router, prefix=settings.client_
 api_router.include_router(digital_product_download_router, prefix=settings.client_prefix)
 api_router.include_router(user_blog_list_router, prefix=settings.client_prefix)
 api_router.include_router(user_blog_detail_router, prefix=settings.client_prefix)
+api_router.include_router(app_rating_router, prefix=settings.client_prefix)
 
 
 

@@ -11,6 +11,7 @@ from src.models.provider.coach_profile import (
 )
 from src.models.provider.product import CoachProduct
 from src.models.provider.service import CoachService, CoachServiceBenefit
+from src.models.client.app_rating import AppRating
 from src.models.client.product_purchase import ProductPurchase
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "CoachBlog",
     "CoachProduct",
     "ProductPurchase",
+    "AppRating",
 ]

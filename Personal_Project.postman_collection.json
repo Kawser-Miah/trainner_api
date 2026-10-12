@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "79471e4d-1e7e-4674-af39-61c3c016c928",
+    "_postman_id": "e3cce0e2-03d6-420a-ac0f-f1edf843abb2",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2264,6 +2264,131 @@
               ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Blog details retrieved successfully.\",\n  \"data\": {\n    \"id\": 1,\n    \"coach\": {\n      \"id\": 4,\n      \"coach_profile_id\": 1,\n      \"full_name\": \"Sarah Chen\",\n      \"email\": \"coach@coach.test\",\n      \"phone_number\": \"\",\n      \"address\": \"New York, USA\",\n      \"rating\": 5.0,\n      \"review_count\": 1,\n      \"headline\": \"Executive & Startup Coach\",\n      \"profile_photo\": \"http://127.0.0.1:8000/media/coach/profile/sarah.gif\",\n      \"about\": \"I help founders scale.\"\n    },\n    \"category\": 1,\n    \"category_details\": {\n      \"id\": 1,\n      \"name\": \"Business\",\n      \"description\": \"Business coaching\"\n    },\n    \"title\": \"How to Build Real Confidence\",\n    \"content\": \"Confidence is key...\",\n    \"image\": null,\n    \"status\": \"published\",\n    \"read_time_minutes\": 2,\n    \"created_at\": \"2026-09-30T05:36:45.669031Z\",\n    \"updated_at\": \"2026-09-30T05:36:51.674795Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get App Rating Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/app-rating",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "app-rating"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get App Rating Stats Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"App rating stats retrieved successfully.\",\n  \"data\": {\n    \"average_rating\": 0,\n    \"total_ratings\": 0,\n    \"has_rated\": false,\n    \"user_rating\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit App Rating",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"review\": \"Great app!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/user/app-rating",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "app-rating"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Submit App Rating Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 201,\n  \"message\": \"App rating submitted successfully.\",\n  \"data\": {\n    \"id\": 1,\n    \"user\": 2,\n    \"user_name\": \"Thomas Client Jr.\",\n    \"rating\": 5,\n    \"review\": \"Great app!\",\n    \"created_at\": \"2026-09-30T05:36:52.330371Z\",\n    \"updated_at\": \"2026-09-30T05:36:52.330371Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get App Ratings List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/app-ratings-list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "app-ratings-list"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get App Ratings List Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"App ratings retrieved successfully.\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"user\": 2,\n      \"user_name\": \"Thomas Client Jr.\",\n      \"image\": \"https://4234cwc7-8004.inc1.devtunnels.ms/media/profile_images/photo.gif\",\n      \"rating\": 5,\n      \"review\": \"Great app!\",\n      \"created_at\": \"2026-09-30T05:36:52.330371Z\",\n      \"updated_at\": \"2026-09-30T05:36:52.330371Z\"\n    }\n  ]\n}"
             }
           ]
         }

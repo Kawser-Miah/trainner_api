@@ -1,7 +1,10 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import desc, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from src.models.accounts.user import User
+from src.models.client.app_rating import AppRating
 from src.models.provider.category import Category
 from src.models.provider.coach_profile import CoachProfile
 from src.models.provider.coach_profile.coach_availability import CoachAvailability
@@ -336,5 +339,64 @@ def get_browse_blog_detail(
         )
     )
     return db.execute(query).scalar_one_or_none()
+
+
+def get_user_app_rating(
+    db: Session,
+    user_id: int,
+) -> AppRating | None:
+    query = select(AppRating).where(AppRating.user_id == user_id)
+    return db.execute(query).scalar_one_or_none()
+
+
+def get_app_rating_aggregate_stats(
+    db: Session,
+) -> tuple[float, int]:
+    row = db.execute(
+        select(
+            func.coalesce(func.avg(AppRating.rating), 0.0),
+            func.count(AppRating.id),
+        )
+    ).one()
+    avg_rating = float(row[0])
+    total_ratings = int(row[1])
+    return avg_rating, total_ratings
+
+
+def upsert_app_rating(
+    db: Session,
+    user_id: int,
+    rating: int,
+    review: str,
+) -> AppRating:
+    existing = get_user_app_rating(db, user_id=user_id)
+    if existing:
+        existing.rating = rating
+        existing.review = review
+        existing.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    new_rating = AppRating(
+        user_id=user_id,
+        rating=rating,
+        review=review,
+    )
+    db.add(new_rating)
+    db.commit()
+    db.refresh(new_rating)
+    return new_rating
+
+
+def get_all_app_ratings(
+    db: Session,
+) -> list[AppRating]:
+    query = (
+        select(AppRating)
+        .options(selectinload(AppRating.user))
+        .order_by(AppRating.created_at.desc(), AppRating.id.desc())
+    )
+    return list(db.execute(query).scalars().all())
 
 

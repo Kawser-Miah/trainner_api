@@ -85,6 +85,8 @@ class Settings(BaseSettings):
     digital_product_download_prefix: str = "/digital-product-download"
     user_blog_list_prefix: str = "/blog-list"
     user_blog_detail_prefix: str = "/blog-detail"
+    app_rating_prefix: str = "/app-rating"
+    app_ratings_list_prefix: str = "/app-ratings-list"
 
 
 

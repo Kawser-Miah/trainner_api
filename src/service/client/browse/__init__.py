@@ -43,6 +43,11 @@ from src.service.client.browse.user_blog_list_service import (
 from src.service.client.browse.user_blog_detail_service import (
     get_user_blog_detail_service,
 )
+from src.service.client.browse.app_rating_service import (
+    get_app_rating_stats_service,
+    submit_app_rating_service,
+    get_app_ratings_list_service,
+)
 
 __all__ = [
     "get_user_category_list_service",
@@ -60,6 +65,9 @@ __all__ = [
     "download_digital_product_file_service",
     "get_user_blog_list_service",
     "get_user_blog_detail_service",
+    "get_app_rating_stats_service",
+    "submit_app_rating_service",
+    "get_app_ratings_list_service",
 ]
 
 
