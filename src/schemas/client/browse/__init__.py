@@ -20,6 +20,10 @@ from src.schemas.client.browse.digital_product_schemas import (
     DigitalProductItemResponse,
     DigitalProductDetailResponse,
 )
+from src.schemas.client.browse.blog_schemas import (
+    UserBlogItemResponse,
+    UserBlogCategoryDetails,
+)
 
 __all__ = [
     "UserCategoryItemResponse",
@@ -34,4 +38,7 @@ __all__ = [
     "ClientServiceDetailResponse",
     "DigitalProductItemResponse",
     "DigitalProductDetailResponse",
+    "UserBlogItemResponse",
+    "UserBlogCategoryDetails",
 ]
+

@@ -14,6 +14,7 @@ from src.models.provider.category import Category
 from src.models.provider.coach_profile import CoachProfile
 from src.models.provider.coach_profile.coach_availability import CoachAvailability
 from src.models.provider.coach_profile.coach_review import CoachReview
+from src.models.provider.blog.coach_blog import CoachBlog
 from src.models.provider.product.coach_product import CoachProduct
 from src.models.provider.service.coach_service import CoachService, CoachServiceBenefit
 from src.utils.jwt import create_access_token
@@ -277,6 +278,11 @@ def test_client_endpoints_require_client_role(client, seed_coach_data):
     assert res3.status_code in [400, 401, 403]
     res4 = client.get("/user/digital-product-download/1")
     assert res4.status_code in [400, 401, 403]
+    res5 = client.get("/user/blog-list")
+    assert res5.status_code in [400, 401, 403]
+    res6 = client.get("/user/blog-detail/1")
+    assert res6.status_code in [400, 401, 403]
+
 
 
 def generate_sample_rich_pdf(file_path: Path):
@@ -477,4 +483,84 @@ def test_digital_product_download_preview_and_purchased(
     # Clean up purchase
     db_session.delete(purchase)
     db_session.commit()
+
+
+@pytest.fixture
+def seed_blog_data(db_session, seed_coach_data):
+    profile = seed_coach_data["profile"]
+    cat = profile.categories[0] if profile.categories else None
+
+    blog = db_session.execute(
+        select(CoachBlog).where(
+            CoachBlog.title == "Five habits of great founders",
+            CoachBlog.coach_profile_id == profile.id,
+        )
+    ).scalars().first()
+    if not blog:
+        blog = CoachBlog(
+            coach_profile_id=profile.id,
+            category_id=cat.id if cat else None,
+            title="Five habits of great founders",
+            content="Long article text about the habits of great founders...",
+            image="/media/coach/blogs/photo.gif",
+            status="published",
+        )
+        db_session.add(blog)
+        db_session.commit()
+        db_session.refresh(blog)
+    return {"blog": blog, "category": cat}
+
+
+def test_user_blog_list(client, client_headers, seed_blog_data):
+    blog = seed_blog_data["blog"]
+    cat = seed_blog_data["category"]
+
+    # 1. Without category filter
+    res = client.get("/user/blog-list", headers=client_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["message"] == "Blogs retrieved successfully."
+    assert isinstance(data["data"], list)
+    item = next(b for b in data["data"] if b["id"] == blog.id)
+    assert item["title"] == "Five habits of great founders"
+    assert "coach" in item
+    assert item["coach"]["headline"] == "Executive & Startup Coach"
+    assert item["category_details"]["name"] == "Business"
+    assert item["read_time_minutes"] >= 1
+    assert item["status"] == "published"
+
+    # 2. With category query param
+    res_cat = client.get(f"/user/blog-list?category={cat.id}", headers=client_headers)
+    assert res_cat.status_code == 200
+    cat_data = res_cat.json()
+    assert any(b["id"] == blog.id for b in cat_data["data"])
+    assert all(b["category"] == cat.id for b in cat_data["data"])
+
+
+def test_user_blog_detail(client, client_headers, seed_blog_data):
+    blog = seed_blog_data["blog"]
+
+    # 1. Successful detail retrieval
+    res = client.get(f"/user/blog-detail/{blog.id}", headers=client_headers)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["status"] == 200
+    assert data["message"] == "Blog details retrieved successfully."
+    blog_data = data["data"]
+    assert blog_data["id"] == blog.id
+    assert blog_data["title"] == blog.title
+    assert blog_data["content"] == blog.content
+    assert blog_data["status"] == "published"
+    assert blog_data["read_time_minutes"] >= 1
+    assert "coach" in blog_data
+    assert blog_data["coach"]["headline"] == "Executive & Startup Coach"
+    assert "category_details" in blog_data
+    assert blog_data["category_details"]["name"] == "Business"
+
+    # 2. Non-existent blog -> 404
+    res_404 = client.get("/user/blog-detail/999999", headers=client_headers)
+    assert res_404.status_code == 404
+
 

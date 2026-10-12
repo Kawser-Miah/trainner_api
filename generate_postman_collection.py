@@ -163,6 +163,21 @@ def build_postman_collection():
         "host": ["{{base_url}}"],
         "path": [c_prefix, settings.digital_product_download_prefix.strip("/"), "{{product_id}}"],
     }
+    client_blog_list_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.user_blog_list_prefix}?category=",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.user_blog_list_prefix.strip("/")],
+        "query": [
+            {"key": "category", "value": ""},
+        ],
+    }
+    client_blog_detail_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.user_blog_detail_prefix}/{{{{blog_id}}}}",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.user_blog_detail_prefix.strip("/"), "{{blog_id}}"],
+    }
+
+
 
 
     collection = {
@@ -2168,7 +2183,103 @@ def build_postman_collection():
                             "url": client_digital_product_download_url,
                         },
                     },
+                    {
+                        "name": "User Blog List",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_blog_list_url,
+                        },
+                        "response": make_response_example(
+                            "User Blog List Success",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Blogs retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 3,
+                                        "coach": {
+                                            "id": 4,
+                                            "coach_profile_id": 1,
+                                            "full_name": "Sarah Chen",
+                                            "email": "coach@coach.test",
+                                            "phone_number": "",
+                                            "address": "New York, USA",
+                                            "rating": 5.0,
+                                            "review_count": 1,
+                                            "headline": "Executive & Startup Coach",
+                                            "profile_photo": "http://127.0.0.1:8000/media/coach/profile/sarah.gif",
+                                            "about": "I help founders scale.",
+                                        },
+                                        "category": 1,
+                                        "category_details": {
+                                            "id": 1,
+                                            "name": "Business",
+                                            "description": "Business coaching",
+                                        },
+                                        "title": "Five habits of great founders",
+                                        "content": "Long article text...",
+                                        "image": "http://127.0.0.1:8000/media/coach/blogs/photo.gif",
+                                        "status": "published",
+                                        "read_time_minutes": 1,
+                                        "created_at": "2026-09-30T05:36:51.661056Z",
+                                        "updated_at": "2026-09-30T05:36:51.661056Z",
+                                    }
+                                ],
+                            },
+                        ),
+                    },
+                    {
+                        "name": "User Blog Detail",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_blog_detail_url,
+                        },
+                        "response": make_response_example(
+                            "User Blog Detail Success",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Blog details retrieved successfully.",
+                                "data": {
+                                    "id": 1,
+                                    "coach": {
+                                        "id": 4,
+                                        "coach_profile_id": 1,
+                                        "full_name": "Sarah Chen",
+                                        "email": "coach@coach.test",
+                                        "phone_number": "",
+                                        "address": "New York, USA",
+                                        "rating": 5.0,
+                                        "review_count": 1,
+                                        "headline": "Executive & Startup Coach",
+                                        "profile_photo": "http://127.0.0.1:8000/media/coach/profile/sarah.gif",
+                                        "about": "I help founders scale.",
+                                    },
+                                    "category": 1,
+                                    "category_details": {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business coaching",
+                                    },
+                                    "title": "How to Build Real Confidence",
+                                    "content": "Confidence is key...",
+                                    "image": None,
+                                    "status": "published",
+                                    "read_time_minutes": 2,
+                                    "created_at": "2026-09-30T05:36:45.669031Z",
+                                    "updated_at": "2026-09-30T05:36:51.674795Z",
+                                },
+                            },
+                        ),
+                    },
                 ],
+
+
 
             },
         ],

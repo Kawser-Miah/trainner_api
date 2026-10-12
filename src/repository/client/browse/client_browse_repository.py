@@ -281,3 +281,60 @@ def get_browse_other_products(
 
     query = query.order_by(CoachProduct.id.asc())
     return list(db.execute(query).scalars().all())
+
+
+def get_browse_blogs(
+    db: Session,
+    category_id: int | None = None,
+    coach_profile_id: int | None = None,
+    search: str | None = None,
+    status: str = "published",
+) -> list[CoachBlog]:
+    query = (
+        select(CoachBlog)
+        .join(CoachBlog.coach_profile)
+        .join(CoachProfile.user)
+        .options(
+            selectinload(CoachBlog.coach_profile).selectinload(CoachProfile.user),
+            selectinload(CoachBlog.category),
+        )
+    )
+
+    if status:
+        query = query.where(CoachBlog.status == status)
+
+    if category_id is not None:
+        query = query.where(CoachBlog.category_id == category_id)
+
+    if coach_profile_id is not None:
+        query = query.where(CoachBlog.coach_profile_id == coach_profile_id)
+
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.where(
+            or_(
+                CoachBlog.title.ilike(term),
+                CoachBlog.content.ilike(term),
+                User.full_name.ilike(term),
+            )
+        )
+
+    query = query.order_by(CoachBlog.id.desc())
+    return list(db.execute(query).scalars().all())
+
+
+def get_browse_blog_detail(
+    db: Session,
+    blog_id: int,
+) -> CoachBlog | None:
+    query = (
+        select(CoachBlog)
+        .where(CoachBlog.id == blog_id)
+        .options(
+            selectinload(CoachBlog.coach_profile).selectinload(CoachProfile.user),
+            selectinload(CoachBlog.category),
+        )
+    )
+    return db.execute(query).scalar_one_or_none()
+
+

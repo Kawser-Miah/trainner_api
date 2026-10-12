@@ -99,3 +99,39 @@ def format_digital_product_dict(
         "created_at": format_iso_datetime(product.created_at),
         "updated_at": format_iso_datetime(product.updated_at),
     }
+
+
+def calculate_read_time_minutes(content: str | None) -> int:
+    if not content:
+        return 1
+    words = len(content.split())
+    return max(1, round(words / 200))
+
+
+def format_browse_blog_dict(
+    blog,
+    request: Request | None = None,
+) -> dict:
+    coach_profile = blog.coach_profile
+    category = blog.category
+    coach_dict = get_coach_provider_details(coach_profile, request) if coach_profile else {}
+    image_url = build_media_url(blog.image, request) if blog.image else None
+
+    return {
+        "id": blog.id,
+        "coach": coach_dict,
+        "category": blog.category_id,
+        "category_details": {
+            "id": category.id if category else blog.category_id,
+            "name": category.name if category else "",
+            "description": category.description if category else "",
+        },
+        "title": blog.title,
+        "content": blog.content,
+        "image": image_url,
+        "status": blog.status,
+        "read_time_minutes": calculate_read_time_minutes(blog.content),
+        "created_at": format_iso_datetime(blog.created_at),
+        "updated_at": format_iso_datetime(blog.updated_at),
+    }
+
