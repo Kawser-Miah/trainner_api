@@ -1,4 +1,5 @@
 from src.repository.provider.category_repository import (
+    get_all_categories,
     get_categories_by_ids,
     get_category_by_id,
     get_or_create_default_categories,
@@ -12,6 +13,7 @@ from src.repository.provider.coach_profile import (
 )
 
 __all__ = [
+    "get_all_categories",
     "get_category_by_id",
     "get_categories_by_ids",
     "get_or_create_default_categories",

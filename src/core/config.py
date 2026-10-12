@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     coach_products_prefix: str = "/products"
     product_create_prefix: str = "/create"
     product_list_prefix: str = "/products-list"
+    category_list_prefix: str = "/categories-list"
 
 
 

@@ -45,3 +45,23 @@ def get_or_create_default_categories(
         db.add(cat)
     db.flush()
     return defaults
+
+
+def get_all_categories(
+    db: Session,
+    is_active: bool | None = None,
+) -> list[Category]:
+    """
+    Retrieve all categories, optionally filtered by is_active status.
+    Ensures default categories exist if the database is empty.
+    """
+    existing_any = db.execute(select(Category.id).limit(1)).scalar_one_or_none()
+    if existing_any is None:
+        get_or_create_default_categories(db)
+
+    query = select(Category).order_by(Category.id.asc())
+    if is_active is not None:
+        query = query.where(Category.is_active == is_active)
+    result = db.execute(query)
+    return list(result.scalars().all())
+

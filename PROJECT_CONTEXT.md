@@ -263,6 +263,7 @@ All endpoints return standard envelopes:
 | `GET` | `/Provider/coach-availability` | Yes (Bearer) | Approved Coach | Retrieve coach availability schedule | None |
 | `PUT` | `/Provider/coach-availability` | Yes (Bearer) | Approved Coach | Update coach availability schedule | `UpdateCoachAvailabilityRequest` |
 | `GET` | `/Provider/reviews` | Yes (Bearer) | Approved Coach | Retrieve coach reviews and ratings | None |
+| `GET` | `/Provider/categories-list/` | No | Any | Retrieve list of coaching categories | Query param: optional `is_active` |
 
 #### 3. Coach - Services (`/Provider/services`)
 | Method | Endpoint | Auth Required | Role Required | Description | Request Payload / Params |

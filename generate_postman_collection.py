@@ -48,6 +48,11 @@ def build_postman_collection():
     delete_account_url = build_url_dict(f"{auth_prefix}{settings.delete_account_prefix}")
 
     provider_profile_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_profile_prefix}")
+    provider_categories_list_url = {
+        "raw": f"{{{{base_url}}}}{settings.provider_prefix.lstrip('/')}{settings.category_list_prefix}/",
+        "host": ["{{base_url}}"],
+        "path": [settings.provider_prefix.strip("/"), settings.category_list_prefix.strip("/")],
+    }
     provider_availability_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_availability_prefix}")
     provider_reviews_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_reviews_prefix}")
     provider_services_create_url = build_url_dict(f"{settings.provider_prefix}{settings.coach_services_prefix}{settings.service_create_prefix}")
@@ -958,6 +963,46 @@ def build_postman_collection():
                                         }
                                     ],
                                 },
+                            },
+                        ),
+                    },
+                    {
+                        "name": "Get Categories List",
+                        "request": {
+                            "method": "GET",
+                            "header": [],
+                            "url": provider_categories_list_url,
+                        },
+                        "response": make_response_example(
+                            "Get Categories List Success Example",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "Categories retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 1,
+                                        "name": "Business",
+                                        "description": "Business",
+                                        "is_active": True,
+                                        "image": "http://127.0.0.1:8000/media/category_images/Screenshot_2026-06-18_122724.png",
+                                    },
+                                    {
+                                        "id": 2,
+                                        "name": "consulting",
+                                        "description": "consulting",
+                                        "is_active": True,
+                                        "image": "http://127.0.0.1:8000/media/category_images/close-up-businesspeople-working-with-documents_1098-1263.avif",
+                                    },
+                                    {
+                                        "id": 3,
+                                        "name": "wellness",
+                                        "description": "wellness",
+                                        "is_active": True,
+                                        "image": "http://127.0.0.1:8000/media/category_images/close-up-businesspeople-working-with-documents_1098-1263_TDOjz1K.avif",
+                                    },
+                                ],
                             },
                         ),
                     },
