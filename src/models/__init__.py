@@ -13,6 +13,7 @@ from src.models.provider.product import CoachProduct
 from src.models.provider.service import CoachService, CoachServiceBenefit
 from src.models.client.app_rating import AppRating
 from src.models.client.product_purchase import ProductPurchase
+from src.models.client.service_order import ServiceOrder
 
 __all__ = [
     "User",
@@ -30,4 +31,5 @@ __all__ = [
     "CoachProduct",
     "ProductPurchase",
     "AppRating",
+    "ServiceOrder",
 ]

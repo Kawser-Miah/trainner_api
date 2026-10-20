@@ -87,6 +87,10 @@ class Settings(BaseSettings):
     user_blog_detail_prefix: str = "/blog-detail"
     app_rating_prefix: str = "/app-rating"
     app_ratings_list_prefix: str = "/app-ratings-list"
+    payments_prefix: str = "/payments"
+    book_service_prefix: str = "/book-service"
+    client_fee_percentage: float = 3.00
+    coach_fee_percentage: float = 5.00
 
 
 

@@ -42,6 +42,7 @@ from src.api.routes.client.browse import (
     user_blog_detail_router,
     app_rating_router,
 )
+from src.api.routes.client.booking_and_payments import book_service_router
 
 
 api_router = APIRouter()
@@ -91,6 +92,10 @@ api_router.include_router(digital_product_download_router, prefix=settings.clien
 api_router.include_router(user_blog_list_router, prefix=settings.client_prefix)
 api_router.include_router(user_blog_detail_router, prefix=settings.client_prefix)
 api_router.include_router(app_rating_router, prefix=settings.client_prefix)
+
+# Client Booking & Payments endpoints (/payments)
+api_router.include_router(book_service_router, prefix=settings.payments_prefix)
+api_router.include_router(book_service_router, prefix=f"{settings.client_prefix}{settings.payments_prefix}", include_in_schema=False)
 
 
 

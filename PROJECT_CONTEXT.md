@@ -203,6 +203,32 @@ D:\backend\coach/
 | `created_at` | `DateTime(tz)`| NOT NULL, Default: UTC now | Creation timestamp |
 | `updated_at` | `DateTime(tz)`| NOT NULL, Default: UTC now | Last update timestamp |
 
+### 4.6. `service_orders` Table
+| Column | Type | Constraints / Defaults | Description |
+|---|---|---|---|
+| `id` | `Integer` | PK, autoincrement | Order ID |
+| `user_id` | `Integer` | FK (`users.id`, CASCADE), Indexed | Client user |
+| `coach_id` | `Integer` | FK (`users.id`, CASCADE), Indexed | Coach user |
+| `coach_profile_id` | `Integer` | FK (`coach_profiles.id`, CASCADE), Indexed | Coach profile |
+| `service_id` | `Integer` | FK (`coach_services.id`, SET NULL), Nullable, Indexed | Associated coach service |
+| `product_id` | `Integer` | FK (`coach_products.id`, SET NULL), Nullable, Indexed | Associated product (if product order) |
+| `order_type` | `String(50)` | NOT NULL, Default: `'service'` | Type of order (`service`, `product`) |
+| `booking_date` | `String(50)` | Nullable | Booking date (e.g. `'2026-10-13'`) |
+| `booking_time` | `String(50)` | Nullable | Booking time slot (e.g. `'02:00 PM'`) |
+| `referral_code`| `String(100)`| Nullable | Optional affiliate referral code |
+| `amount` | `String(50)` | NOT NULL, Default: `'0.00'` | Base item price |
+| `client_fee` | `String(50)` | NOT NULL, Default: `'0.00'` | Client platform fee |
+| `client_fee_percent` | `String(20)` | NOT NULL, Default: `'3.00'` | Client fee percentage (3.00%) |
+| `total_amount` | `String(50)` | NOT NULL, Default: `'0.00'` | Total paid by client (`amount + client_fee`) |
+| `coach_fee` | `String(50)` | NOT NULL, Default: `'0.00'` | Coach commission fee |
+| `coach_fee_percent` | `String(20)` | NOT NULL, Default: `'5.00'` | Coach fee percentage (5.00%) |
+| `coach_earning`| `String(50)` | NOT NULL, Default: `'0.00'` | Net coach earning (`amount - coach_fee`) |
+| `currency` | `String(10)` | NOT NULL, Default: `'USD'` | Currency symbol |
+| `status` | `String(50)` | NOT NULL, Default: `'pending'` | Order status |
+| `payment_status` | `String(50)` | NOT NULL, Default: `'pending'` | Payment status |
+| `created_at` | `DateTime(tz)`| NOT NULL, Default: UTC now | Order creation timestamp |
+| `updated_at` | `DateTime(tz)`| NOT NULL, Default: UTC now | Order update timestamp |
+
 ---
 
 ## 5. API Reference & Authentication Specification
@@ -304,6 +330,11 @@ All endpoints return standard envelopes:
 | `GET` | `/user/coaches/{coach_profile_id}/reviews` | Yes (Bearer) | Client (`USER`) | Get coach reviews and breakdown | Path: `coach_profile_id` |
 | `GET` | `/user/user-service-list` | Yes (Bearer) | Client (`USER`) | List published coach services | Query: `search`, `coach_profile`, `category` |
 | `GET` | `/user/user-service-detail/{service_id}` | Yes (Bearer) | Client (`USER`) | Get service detail and other coach sessions | Path: `service_id` |
+
+#### 7. Client - Booking & Payments (`/payments` & `/api/payments`)
+| Method | Endpoint | Auth Required | Role Required | Description | Request Payload / Params |
+|---|---|:---:|:---:|---|---|
+| `POST` | `/payments/book-service` | Yes (Bearer) | Client (`USER`) | Create a new service order booking | `BookServiceRequest` (`service_id`, `booking_date`, `booking_time`, `referral_code`) |
 
 ---
 
