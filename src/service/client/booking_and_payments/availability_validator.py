@@ -381,21 +381,18 @@ def has_available_slots_on_day(
         end_h, end_m = 17, 0
 
     current_min = start_h * 60 + start_m
-    end_total_min = end_h * 60 + end_m - session_duration
+    end_total_min = end_h * 60 + end_m - 15
 
     while current_min <= end_total_min:
-        m = current_min % 60
-        cadence_match = (m % session_duration == 0) or (m == 0)
-        if cadence_match:
-            if is_slot_available(
-                slot_start_min=current_min,
-                session_duration=session_duration,
-                is_today=is_today,
-                is_past_date=False,
-                current_time_min=current_time_min,
-                active_booked_intervals=active_booked_intervals,
-            ):
-                return True
+        if is_slot_available(
+            slot_start_min=current_min,
+            session_duration=15,
+            is_today=is_today,
+            is_past_date=False,
+            current_time_min=current_time_min,
+            active_booked_intervals=active_booked_intervals,
+        ):
+            return True
         current_min += 15
 
     return False

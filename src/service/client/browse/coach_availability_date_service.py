@@ -84,18 +84,17 @@ async def get_coach_availability_date_service(
         end_h, end_m = map(int, end_t.split(":"))
 
         current_min = start_h * 60 + start_m
-        end_total_min = end_h * 60 + end_m - session_duration
+        end_total_min = end_h * 60 + end_m - 15
 
         while current_min <= end_total_min:
             h = current_min // 60
             m = current_min % 60
             time_formatted = f"{h:02d}:{m:02d}"
             label = format_12hr_time(h, m)
-            cadence_match = (m % session_duration == 0) or (m == 0)
 
-            is_avail = cadence_match and is_slot_available(
+            is_avail = is_slot_available(
                 slot_start_min=current_min,
-                session_duration=session_duration,
+                session_duration=15,
                 is_today=is_today,
                 is_past_date=is_past_date,
                 current_time_min=current_time_min,
@@ -127,7 +126,7 @@ async def get_coach_availability_date_service(
             s_h, s_m = map(int, w_start.split(":"))
             e_h, e_m = map(int, w_end.split(":"))
             cur = s_h * 60 + s_m
-            max_cur = e_h * 60 + e_m - session_duration
+            max_cur = e_h * 60 + e_m - 15
 
             while cur <= max_cur:
                 hh = cur // 60
@@ -141,7 +140,7 @@ async def get_coach_availability_date_service(
 
                 on_call_free = is_slot_available(
                     slot_start_min=cur,
-                    session_duration=session_duration,
+                    session_duration=15,
                     is_today=is_today,
                     is_past_date=is_past_date,
                     current_time_min=current_time_min,
