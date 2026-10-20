@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from fastapi import Request
 from sqlalchemy.orm import Session
 
@@ -8,7 +8,14 @@ from src.models.accounts.user import User
 from src.models.client.service_order import ServiceOrder
 from src.repository.client.booking_and_payments.booking_and_payments_repository import (
     create_service_order,
+    get_coach_orders_for_date,
     get_service_for_booking,
+)
+from src.service.client.booking_and_payments.availability_validator import (
+    check_slot_conflicts,
+    parse_time_to_minutes,
+    validate_coach_working_hours,
+    validate_not_in_past,
 )
 from src.schemas.client.booking_and_payments.booking_schemas import (
     BookServiceRequest,
@@ -33,7 +40,14 @@ async def book_service_service(
     db: Session,
     request: Request | None = None,
 ) -> ServiceOrderDetailResponse:
-    # 1. Fetch service with category, coach profile and user
+    # 1. Very first check: Ensure requested booking date and time are not in the past
+    start_min = parse_time_to_minutes(payload.booking_time)
+    validate_not_in_past(
+        booking_date_str=payload.booking_date,
+        start_min=start_min,
+    )
+
+    # 2. Fetch service with category, coach profile and user
     service = get_service_for_booking(db=db, service_id=payload.service_id)
     if not service:
         raise AppException(
@@ -42,7 +56,7 @@ async def book_service_service(
             error="SERVICE_NOT_FOUND",
         )
 
-    # 2. Fetch coach profile & user
+    # 3. Fetch coach profile & user
     coach_profile = service.coach_profile
     if not coach_profile:
         raise AppException(
@@ -59,7 +73,7 @@ async def book_service_service(
             error="COACH_NOT_FOUND",
         )
 
-    # 3. Check for self-booking
+    # 4. Check for self-booking
     if current_user.id == coach_user.id:
         raise AppException(
             message="You cannot book your own service.",
@@ -67,7 +81,33 @@ async def book_service_service(
             error="SELF_BOOKING_NOT_ALLOWED",
         )
 
-    # 4. Fee & amount calculations
+    # 5. Validate session interval and coach working hours
+    session_duration = service.session_duration if service and service.session_duration else 60
+    end_min = start_min + session_duration
+
+    validate_coach_working_hours(
+        availability=coach_profile.availability,
+        booking_date_str=payload.booking_date,
+        start_min=start_min,
+        end_min=end_min,
+    )
+
+    # 6. Check slot conflicts & auto-release expired pending bookings
+    now_utc = datetime.now(timezone.utc)
+    existing_orders = get_coach_orders_for_date(
+        db=db,
+        coach_profile_id=coach_profile.id,
+        booking_date=payload.booking_date,
+    )
+    check_slot_conflicts(
+        existing_orders=existing_orders,
+        new_start_min=start_min,
+        new_end_min=end_min,
+        db=db,
+        now=now_utc,
+    )
+
+    # 6. Fee & amount calculations
     try:
         price = float(service.price or "0.00")
     except (ValueError, TypeError):
@@ -92,7 +132,10 @@ async def book_service_service(
     coach_earning_str = f"{coach_earning_val:.2f}"
     currency_str = service.currency or "USD"
 
-    # 5. Persist order
+    # Set temporary slot lock / payment grace period
+    payment_due_at = now_utc + timedelta(minutes=settings.booking_payment_timeout_minutes)
+
+    # 7. Persist order
     new_order = ServiceOrder(
         user_id=current_user.id,
         coach_id=coach_user.id,
@@ -119,7 +162,7 @@ async def book_service_service(
         meeting_link=None,
         coach_message="",
         is_on_call=False,
-        payment_due_at=None,
+        payment_due_at=payment_due_at,
     )
     created_order = create_service_order(db=db, order=new_order)
 

@@ -11,9 +11,27 @@ def get_service_for_booking(db: Session, service_id: int) -> CoachService | None
         .options(
             joinedload(CoachService.category),
             joinedload(CoachService.coach_profile).joinedload(CoachProfile.user),
+            joinedload(CoachService.coach_profile).joinedload(CoachProfile.availability),
         )
         .filter(CoachService.id == service_id)
         .first()
+    )
+
+
+def get_coach_orders_for_date(
+    db: Session,
+    coach_profile_id: int,
+    booking_date: str,
+) -> list[ServiceOrder]:
+    return (
+        db.query(ServiceOrder)
+        .options(joinedload(ServiceOrder.service))
+        .filter(
+            ServiceOrder.coach_profile_id == coach_profile_id,
+            ServiceOrder.booking_date == booking_date,
+            ServiceOrder.status.notin_(["cancelled", "rejected", "expired"]),
+        )
+        .all()
     )
 
 

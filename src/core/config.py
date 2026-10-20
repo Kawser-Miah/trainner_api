@@ -91,6 +91,7 @@ class Settings(BaseSettings):
     book_service_prefix: str = "/book-service"
     client_fee_percentage: float = 3.00
     coach_fee_percentage: float = 5.00
+    booking_payment_timeout_minutes: int = 15
 
 
 
