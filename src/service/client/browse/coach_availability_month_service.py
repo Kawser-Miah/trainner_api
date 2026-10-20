@@ -1,5 +1,5 @@
 import calendar
-from datetime import date
+from datetime import date, datetime, timezone
 from sqlalchemy.orm import Session
 
 from src.repository.client.browse.client_browse_repository import (
@@ -8,6 +8,10 @@ from src.repository.client.browse.client_browse_repository import (
 )
 from src.schemas.client.browse.availability_schemas import (
     CoachMonthAvailabilityResponse,
+)
+from src.service.client.booking_and_payments.availability_validator import (
+    get_active_booked_intervals_for_month,
+    has_available_slots_on_day,
 )
 
 
@@ -25,6 +29,7 @@ async def get_coach_availability_month_service(
             session_duration = service.session_duration
 
     weekly = availability.weekly if availability and availability.weekly else []
+    on_call_windows = availability.on_call if availability and availability.on_call else []
     on_call_enabled = bool(availability.on_call_enabled) if availability else True
     time_off = availability.time_off if availability and availability.time_off else []
     time_off_dates = {t.get("date") for t in time_off if isinstance(t, dict) and t.get("date")}
@@ -42,13 +47,48 @@ async def get_coach_availability_month_service(
         year_val, month_val = 2026, 10
 
     _, num_days = calendar.monthrange(year_val, month_val)
-    available_weekdays = {w.get("weekday") for w in weekly if isinstance(w, dict) and "weekday" in w}
+
+    month_prefix = f"{year_val:04d}-{month_val:02d}"
+    now = datetime.now()
+    today = now.date()
+    current_time_min = now.hour * 60 + now.minute
+
+    # Fetch active booking intervals for the entire month
+    intervals_by_date = get_active_booked_intervals_for_month(
+        db=db,
+        coach_profile_id=coach_profile_id,
+        month_prefix=month_prefix,
+        now=datetime.now(timezone.utc),
+    )
 
     available_dates = []
     for day in range(1, num_days + 1):
         d = date(year_val, month_val, day)
+        # 1. Never include past days (e.g. yesterday cannot be booked)
+        if d < today:
+            continue
+
         date_key = d.isoformat()
-        if d.weekday() in available_weekdays and date_key not in time_off_dates:
+        # 2. Never include coach leave / time-off days
+        if date_key in time_off_dates:
+            continue
+
+        weekday_num = d.weekday()
+        day_schedule = next((w for w in weekly if w.get("weekday") == weekday_num), None)
+
+        if not day_schedule:
+            continue
+
+        # 3. Verify at least one unbooked future slot exists on this day
+        has_slot = has_available_slots_on_day(
+            target_date=d,
+            day_schedule=day_schedule,
+            session_duration=session_duration,
+            today=today,
+            current_time_min=current_time_min,
+            active_booked_intervals=intervals_by_date.get(date_key, []),
+        )
+        if has_slot:
             available_dates.append(date_key)
 
     return CoachMonthAvailabilityResponse(
@@ -59,3 +99,4 @@ async def get_coach_availability_month_service(
         month=f"{year_val:04d}-{month_val:02d}",
         available_dates=available_dates,
     ).model_dump()
+

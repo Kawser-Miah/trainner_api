@@ -217,3 +217,186 @@ def check_slot_conflicts(
 
     if has_expired_updates:
         db.commit()
+
+
+def get_active_booked_intervals_for_date(
+    db: Session,
+    coach_profile_id: int,
+    booking_date: str,
+    now: datetime,
+) -> list[tuple[int, int]]:
+    """Retrieve all (start_min, end_min) intervals for active or unexpired pending bookings."""
+    from src.repository.client.booking_and_payments.booking_and_payments_repository import (
+        get_coach_orders_for_date,
+    )
+
+    orders = get_coach_orders_for_date(
+        db=db,
+        coach_profile_id=coach_profile_id,
+        booking_date=booking_date,
+    )
+    intervals: list[tuple[int, int]] = []
+    has_expired_updates = False
+
+    for order in orders:
+        is_pending_expired = False
+        if order.payment_status == "pending":
+            if order.payment_due_at is not None:
+                is_pending_expired = order.payment_due_at <= now
+            elif order.created_at is not None:
+                timeout_dt = order.created_at + timedelta(
+                    minutes=settings.booking_payment_timeout_minutes
+                )
+                is_pending_expired = timeout_dt <= now
+
+        if is_pending_expired:
+            order.status = "expired"
+            order.payment_status = "expired"
+            db.add(order)
+            has_expired_updates = True
+            continue
+
+        if order.status in ["cancelled", "rejected", "expired"]:
+            continue
+
+        try:
+            ex_start = parse_time_to_minutes(order.booking_time or "")
+        except AppException:
+            continue
+
+        ex_dur = (
+            order.service.session_duration
+            if order.service and order.service.session_duration
+            else 60
+        )
+        intervals.append((ex_start, ex_start + ex_dur))
+
+    if has_expired_updates:
+        db.commit()
+
+    return intervals
+
+
+def is_slot_available(
+    slot_start_min: int,
+    session_duration: int,
+    is_today: bool,
+    is_past_date: bool,
+    current_time_min: int,
+    active_booked_intervals: list[tuple[int, int]],
+) -> bool:
+    """Check if a specific time slot is free of past time and booking overlap conflicts."""
+    if is_past_date:
+        return False
+    if is_today and slot_start_min <= current_time_min:
+        return False
+    slot_end_min = slot_start_min + session_duration
+    for ex_start, ex_end in active_booked_intervals:
+        if slot_start_min < ex_end and slot_end_min > ex_start:
+            return False
+    return True
+
+
+def get_active_booked_intervals_for_month(
+    db: Session,
+    coach_profile_id: int,
+    month_prefix: str,
+    now: datetime,
+) -> dict[str, list[tuple[int, int]]]:
+    """Retrieve all (start_min, end_min) intervals mapped by booking_date for the month."""
+    from collections import defaultdict
+    from src.repository.client.booking_and_payments.booking_and_payments_repository import (
+        get_coach_orders_for_month,
+    )
+
+    orders = get_coach_orders_for_month(
+        db=db,
+        coach_profile_id=coach_profile_id,
+        month_prefix=month_prefix,
+    )
+    intervals_by_date: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    has_expired_updates = False
+
+    for order in orders:
+        is_pending_expired = False
+        if order.payment_status == "pending":
+            if order.payment_due_at is not None:
+                is_pending_expired = order.payment_due_at <= now
+            elif order.created_at is not None:
+                timeout_dt = order.created_at + timedelta(
+                    minutes=settings.booking_payment_timeout_minutes
+                )
+                is_pending_expired = timeout_dt <= now
+
+        if is_pending_expired:
+            order.status = "expired"
+            order.payment_status = "expired"
+            db.add(order)
+            has_expired_updates = True
+            continue
+
+        if order.status in ["cancelled", "rejected", "expired"]:
+            continue
+
+        try:
+            ex_start = parse_time_to_minutes(order.booking_time or "")
+        except AppException:
+            continue
+
+        ex_dur = (
+            order.service.session_duration
+            if order.service and order.service.session_duration
+            else 60
+        )
+        if order.booking_date:
+            intervals_by_date[order.booking_date].append((ex_start, ex_start + ex_dur))
+
+    if has_expired_updates:
+        db.commit()
+
+    return intervals_by_date
+
+
+def has_available_slots_on_day(
+    target_date: date,
+    day_schedule: dict | None,
+    session_duration: int,
+    today: date,
+    current_time_min: int,
+    active_booked_intervals: list[tuple[int, int]],
+) -> bool:
+    """Determine if a given day has at least one available, unbooked slot in the future."""
+    if target_date < today or not day_schedule:
+        return False
+
+    is_today = (target_date == today)
+
+    start_t = day_schedule.get("start_time", "09:00")
+    end_t = day_schedule.get("end_time", "17:00")
+    try:
+        start_h, start_m = map(int, start_t.split(":"))
+        end_h, end_m = map(int, end_t.split(":"))
+    except (ValueError, AttributeError):
+        start_h, start_m = 9, 0
+        end_h, end_m = 17, 0
+
+    current_min = start_h * 60 + start_m
+    end_total_min = end_h * 60 + end_m - session_duration
+
+    while current_min <= end_total_min:
+        m = current_min % 60
+        cadence_match = (m % session_duration == 0) or (m == 0)
+        if cadence_match:
+            if is_slot_available(
+                slot_start_min=current_min,
+                session_duration=session_duration,
+                is_today=is_today,
+                is_past_date=False,
+                current_time_min=current_time_min,
+                active_booked_intervals=active_booked_intervals,
+            ):
+                return True
+        current_min += 15
+
+    return False
+

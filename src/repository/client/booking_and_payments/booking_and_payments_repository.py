@@ -35,6 +35,23 @@ def get_coach_orders_for_date(
     )
 
 
+def get_coach_orders_for_month(
+    db: Session,
+    coach_profile_id: int,
+    month_prefix: str,
+) -> list[ServiceOrder]:
+    return (
+        db.query(ServiceOrder)
+        .options(joinedload(ServiceOrder.service))
+        .filter(
+            ServiceOrder.coach_profile_id == coach_profile_id,
+            ServiceOrder.booking_date.startswith(month_prefix),
+            ServiceOrder.status.notin_(["cancelled", "rejected", "expired"]),
+        )
+        .all()
+    )
+
+
 def create_service_order(db: Session, order: ServiceOrder) -> ServiceOrder:
     db.add(order)
     db.commit()

@@ -12,6 +12,10 @@ from src.schemas.client.browse.availability_schemas import (
     OnCallWindowItem,
     TimeSlotItemResponse,
 )
+from src.service.client.booking_and_payments.availability_validator import (
+    get_active_booked_intervals_for_date,
+    is_slot_available,
+)
 
 
 def format_12hr_time(hour: int, minute: int) -> str:
@@ -56,6 +60,20 @@ async def get_coach_availability_date_service(
 
     weekday_num = parsed_date.weekday()
 
+    now = datetime.now()
+    today = now.date()
+    is_today = (parsed_date == today)
+    is_past_date = (parsed_date < today)
+    current_time_min = now.hour * 60 + now.minute
+
+    # Fetch active booking intervals for this coach on the target date
+    active_intervals = get_active_booked_intervals_for_date(
+        db=db,
+        coach_profile_id=coach_profile_id,
+        booking_date=target_date_str,
+        now=datetime.now(timezone.utc),
+    )
+
     day_schedule = next((w for w in weekly if w.get("weekday") == weekday_num), None)
     slots: list[TimeSlotItemResponse] = []
 
@@ -73,7 +91,17 @@ async def get_coach_availability_date_service(
             m = current_min % 60
             time_formatted = f"{h:02d}:{m:02d}"
             label = format_12hr_time(h, m)
-            is_avail = (m % session_duration == 0) or (m == 0)
+            cadence_match = (m % session_duration == 0) or (m == 0)
+
+            is_avail = cadence_match and is_slot_available(
+                slot_start_min=current_min,
+                session_duration=session_duration,
+                is_today=is_today,
+                is_past_date=is_past_date,
+                current_time_min=current_time_min,
+                active_booked_intervals=active_intervals,
+            )
+
             slots.append(
                 TimeSlotItemResponse(
                     time=time_formatted,
@@ -111,11 +139,20 @@ async def get_coach_availability_date_service(
                 opens_at = (slot_dt - timedelta(hours=12)).isoformat()
                 closes_at = (slot_dt - timedelta(hours=2)).isoformat()
 
+                on_call_free = is_slot_available(
+                    slot_start_min=cur,
+                    session_duration=session_duration,
+                    is_today=is_today,
+                    is_past_date=is_past_date,
+                    current_time_min=current_time_min,
+                    active_booked_intervals=active_intervals,
+                )
+
                 on_call_slots.append(
                     OnCallSlotItemResponse(
                         time=slot_time,
                         label=slot_label,
-                        available=True,
+                        available=on_call_free,
                         can_request_now=False,
                         opens_at=opens_at,
                         closes_at=closes_at,
@@ -129,10 +166,14 @@ async def get_coach_availability_date_service(
             slots=on_call_slots,
         )
 
+    has_any_available = any(slot.available for slot in slots) or (
+        bool(on_call_obj and any(s.available for s in on_call_obj.slots))
+    )
+
     return CoachDateAvailabilityResponse(
         coach_profile_id=coach_profile_id,
         session_duration=session_duration,
-        has_availability=bool(slots),
+        has_availability=has_any_available,
         takes_on_call=on_call_enabled,
         date=target_date_str,
         weekday=weekday_num,

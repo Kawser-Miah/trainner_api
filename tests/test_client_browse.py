@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import pytest
 from starlette.testclient import TestClient
 from sqlalchemy import select
@@ -10,6 +11,7 @@ from src.main import app
 from src.core.database import SessionLocal
 from src.models.accounts.user import User
 from src.models.client.product_purchase import ProductPurchase
+from src.models.client.service_order import ServiceOrder
 from src.models.provider.category import Category
 from src.models.provider.coach_profile import CoachProfile
 from src.models.provider.coach_profile.coach_availability import CoachAvailability
@@ -645,5 +647,157 @@ def test_app_ratings_flow(client, client_user, client_headers, db_session):
     # Clean up
     db_session.query(AppRating).filter(AppRating.user_id == client_user.id).delete()
     db_session.commit()
+
+
+def test_coach_availability_date_reflects_booked_and_past_slots(client, client_headers, client_user, seed_coach_data, db_session):
+    prof_id = seed_coach_data["profile"].id
+    coach_user_id = seed_coach_data["profile"].user_id
+
+    # Compute a future Monday (seed coach is scheduled on weekday 0 = Monday)
+    future_dt = datetime.now() + timedelta(days=7)
+    while future_dt.weekday() != 0:
+        future_dt += timedelta(days=1)
+    future_date_str = future_dt.strftime("%Y-%m-%d")
+
+    # Clean existing orders for this test profile
+    db_session.query(ServiceOrder).filter(ServiceOrder.coach_profile_id == prof_id).delete()
+    db_session.commit()
+
+    # 1. Initially, future 14:00 (02:00 PM) slot should be available
+    res1 = client.get(
+        f"/user/coaches/{prof_id}/availability?date={future_date_str}",
+        headers=client_headers,
+    )
+    assert res1.status_code == 200
+    slots1 = res1.json()["data"]["slots"]
+    slot_14 = next(s for s in slots1 if s["time"] == "14:00")
+    assert slot_14["available"] is True
+
+    # 2. Book an order at 02:00 PM (14:00) with a 60-min service
+    order = ServiceOrder(
+        user_id=client_user.id,
+        coach_id=coach_user_id,
+        coach_profile_id=prof_id,
+        service_id=seed_coach_data["service"].id,
+        order_type="service",
+        booking_date=future_date_str,
+        booking_time="02:00 PM",
+        amount="160.00",
+        total_amount="164.80",
+        currency="USD",
+        status="pending",
+        payment_status="pending",
+        payment_due_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+    )
+    db_session.add(order)
+    db_session.commit()
+
+    # 3. Query availability again: 14:00 should now be unavailable (available=False)
+    res2 = client.get(
+        f"/user/coaches/{prof_id}/availability?date={future_date_str}",
+        headers=client_headers,
+    )
+    assert res2.status_code == 200
+    slots2 = res2.json()["data"]["slots"]
+    slot_14_after = next(s for s in slots2 if s["time"] == "14:00")
+    assert slot_14_after["available"] is False
+
+    # 4. Simulate payment timeout by setting payment_due_at to the past
+    order.payment_due_at = datetime.now(timezone.utc) - timedelta(minutes=5)
+    db_session.add(order)
+    db_session.commit()
+
+    # 5. Query availability again: slot should now be released (available=True)
+    res3 = client.get(
+        f"/user/coaches/{prof_id}/availability?date={future_date_str}",
+        headers=client_headers,
+    )
+    assert res3.status_code == 200
+    slots3 = res3.json()["data"]["slots"]
+    slot_14_released = next(s for s in slots3 if s["time"] == "14:00")
+    assert slot_14_released["available"] is True
+
+    # Clean up
+    db_session.query(ServiceOrder).filter(ServiceOrder.coach_profile_id == prof_id).delete()
+    db_session.commit()
+
+
+def test_coach_availability_month_reflects_past_and_fully_booked_days(
+    client, client_headers, client_user, seed_coach_data, db_session
+):
+    prof_id = seed_coach_data["profile"].id
+    coach_user_id = seed_coach_data["profile"].user_id
+    today = datetime.now().date()
+    month_str = today.strftime("%Y-%m")
+
+    # Clean existing orders for this coach profile
+    db_session.query(ServiceOrder).filter(ServiceOrder.coach_profile_id == prof_id).delete()
+    db_session.commit()
+
+    # 1. Query current month
+    res = client.get(
+        f"/user/coaches/{prof_id}/availability?month={month_str}",
+        headers=client_headers,
+    )
+    assert res.status_code == 200
+    avail_dates = res.json()["data"]["available_dates"]
+
+    # All dates in available_dates must be >= today (no past dates)
+    for d_str in avail_dates:
+        d_val = datetime.strptime(d_str, "%Y-%m-%d").date()
+        assert d_val >= today
+
+    # 2. Pick a future date that is currently available in this month (e.g. next available Monday)
+    future_avail_dates = [d for d in avail_dates if datetime.strptime(d, "%Y-%m-%d").date() > today]
+    if future_avail_dates:
+        target_date_str = future_avail_dates[0]
+
+        # Query all slots on that target date
+        res_date = client.get(
+            f"/user/coaches/{prof_id}/availability?date={target_date_str}",
+            headers=client_headers,
+        )
+        assert res_date.status_code == 200
+        slots = res_date.json()["data"]["slots"]
+        assert len(slots) > 0
+
+        # Book ALL slots for that target date
+        orders = []
+        for slot in slots:
+            time_obj = datetime.strptime(slot["time"], "%H:%M")
+            time_ampm = time_obj.strftime("%I:%M %p")
+            orders.append(
+                ServiceOrder(
+                    user_id=client_user.id,
+                    coach_id=coach_user_id,
+                    coach_profile_id=prof_id,
+                    service_id=seed_coach_data["service"].id,
+                    order_type="service",
+                    booking_date=target_date_str,
+                    booking_time=time_ampm,
+                    amount="160.00",
+                    total_amount="164.80",
+                    currency="USD",
+                    status="pending",
+                    payment_status="pending",
+                    payment_due_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+                )
+            )
+        db_session.add_all(orders)
+        db_session.commit()
+
+        # 3. Query month again: target_date_str must NOT be present in available_dates
+        res2 = client.get(
+            f"/user/coaches/{prof_id}/availability?month={month_str}",
+            headers=client_headers,
+        )
+        assert res2.status_code == 200
+        avail_dates_after = res2.json()["data"]["available_dates"]
+        assert target_date_str not in avail_dates_after
+
+        # 4. Clean up orders
+        db_session.query(ServiceOrder).filter(ServiceOrder.coach_profile_id == prof_id).delete()
+        db_session.commit()
+
 
 
