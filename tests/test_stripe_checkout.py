@@ -392,3 +392,101 @@ def test_create_checkout_session_already_paid(client, db_session, test_setup):
     )
     assert res.status_code == 400
     assert res.json()["error"] == "ALREADY_PAID"
+
+
+def test_stripe_webhook_checkout_session_completed(client, db_session, test_setup):
+    setup = test_setup
+    order = ServiceOrder(
+        user_id=setup["client_user"].id,
+        coach_id=setup["coach_user"].id,
+        coach_profile_id=setup["profile"].id,
+        service_id=setup["service"].id,
+        order_type="service",
+        booking_date="2026-10-29",
+        booking_time="03:00 PM",
+        amount="160.00",
+        total_amount="164.80",
+        status="pending",
+        payment_status="pending",
+        transaction_id="cs_test_webhook_123",
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    payload = {
+        "id": "evt_test_123",
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "id": "cs_test_webhook_123",
+                "payment_intent": "pi_test_confirmed_999",
+                "payment_status": "paid",
+                "metadata": {
+                    "booking_id": str(order.id),
+                },
+            }
+        },
+    }
+
+    res = client.post(
+        "/payments/stripe/webhook",
+        json=payload,
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["received"] is True
+    assert data["booking_id"] == order.id
+    assert data["transaction_id"] == "pi_test_confirmed_999"
+
+    db_session.refresh(order)
+    assert order.payment_status == "paid"
+    assert order.status == "confirmed"
+    assert order.payment_method == "stripe"
+    assert order.transaction_id == "pi_test_confirmed_999"
+
+
+def test_stripe_webhook_expired(client, db_session, test_setup):
+    setup = test_setup
+    order = ServiceOrder(
+        user_id=setup["client_user"].id,
+        coach_id=setup["coach_user"].id,
+        coach_profile_id=setup["profile"].id,
+        service_id=setup["service"].id,
+        order_type="service",
+        booking_date="2026-10-29",
+        booking_time="04:00 PM",
+        amount="160.00",
+        total_amount="164.80",
+        status="pending",
+        payment_status="pending",
+        transaction_id="cs_test_webhook_456",
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    payload = {
+        "id": "evt_test_456",
+        "type": "checkout.session.expired",
+        "data": {
+            "object": {
+                "id": "cs_test_webhook_456",
+                "metadata": {
+                    "booking_id": str(order.id),
+                },
+            }
+        },
+    }
+
+    res = client.post(
+        "/payments/stripe/webhook",
+        json=payload,
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["received"] is True
+
+    db_session.refresh(order)
+    assert order.payment_status == "expired"
+

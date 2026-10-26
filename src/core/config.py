@@ -91,6 +91,7 @@ class Settings(BaseSettings):
     book_service_prefix: str = "/book-service"
     stripe_prefix: str = "/stripe"
     create_checkout_session_prefix: str = "/create-checkout-session"
+    stripe_webhook_prefix: str = "/webhook"
     client_fee_percentage: float = 3.00
     coach_fee_percentage: float = 5.00
     booking_payment_timeout_minutes: int = 15

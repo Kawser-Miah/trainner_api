@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 
 from src.core.common_responses import CommonResponse
@@ -12,12 +12,16 @@ from src.schemas.client.booking_and_payments.stripe_schemas import (
 from src.service.client.booking_and_payments.stripe_service import (
     create_stripe_checkout_session_service,
 )
+from src.service.client.booking_and_payments.stripe_webhook_service import (
+    handle_stripe_webhook_service,
+)
 
 router = APIRouter(
     tags=["Client Booking & Payments"],
 )
 
 route_path = f"{settings.stripe_prefix}{settings.create_checkout_session_prefix}"
+webhook_path = f"{settings.stripe_prefix}{settings.stripe_webhook_prefix}"
 
 
 @router.post(
@@ -50,3 +54,28 @@ async def create_checkout_session(
         message=result.message,
         data=result.data.model_dump(),
     )
+
+
+@router.post(
+    webhook_path,
+    status_code=status.HTTP_200_OK,
+    summary="Stripe Webhook",
+    description="Listen for Stripe events (e.g. checkout.session.completed) to automatically confirm payments.",
+)
+@router.post(
+    f"{webhook_path}/",
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+)
+async def stripe_webhook(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    payload_bytes = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    result = await handle_stripe_webhook_service(
+        payload_bytes=payload_bytes,
+        sig_header=sig_header,
+        db=db,
+    )
+    return result
