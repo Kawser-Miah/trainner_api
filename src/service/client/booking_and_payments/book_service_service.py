@@ -158,9 +158,6 @@ async def book_service_service(
         payment_status="pending",
         payment_method=None,
         transaction_id=None,
-        notes=None,
-        meeting_link=None,
-        coach_message="",
         is_on_call=False,
         payment_due_at=payment_due_at,
     )
@@ -188,6 +185,7 @@ async def book_service_service(
         price=amount_str,
         currency=currency_str,
         booking_type=service.booking_type,
+        session_url=service.session_url,
         category=category_data,
     )
 
@@ -228,9 +226,6 @@ async def book_service_service(
         payment_status=created_order.payment_status,
         payment_method=created_order.payment_method,
         transaction_id=created_order.transaction_id,
-        notes=created_order.notes,
-        meeting_link=created_order.meeting_link,
-        coach_message=created_order.coach_message,
         is_on_call=created_order.is_on_call,
         payment_due_at=format_iso_datetime(created_order.payment_due_at) if created_order.payment_due_at else None,
         created_at=format_iso_datetime(created_order.created_at),

@@ -47,6 +47,7 @@ class OrderServiceResponse(BaseModel):
     price: str = "0.00"
     currency: str = "USD"
     booking_type: str = "instant"
+    session_url: str | None = None
     category: OrderCategoryResponse
 
     model_config = ConfigDict(from_attributes=True)
@@ -73,9 +74,6 @@ class ServiceOrderDetailResponse(BaseModel):
     payment_status: str
     payment_method: str | None = None
     transaction_id: str | None = None
-    notes: str | None = None
-    meeting_link: str | None = None
-    coach_message: str = ""
     is_on_call: bool = False
     payment_due_at: str | None = None
     created_at: str

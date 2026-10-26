@@ -136,21 +136,6 @@ class ServiceOrder(Base):
         nullable=True,
     )
 
-    notes: Mapped[str | None] = mapped_column(
-        Text,
-        nullable=True,
-    )
-
-    meeting_link: Mapped[str | None] = mapped_column(
-        String(500),
-        nullable=True,
-    )
-
-    coach_message: Mapped[str] = mapped_column(
-        Text,
-        default="",
-        nullable=False,
-    )
 
     is_on_call: Mapped[bool] = mapped_column(
         Boolean,
