@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "e3cce0e2-03d6-420a-ac0f-f1edf843abb2",
+    "_postman_id": "01b71a3b-897d-4e75-bad8-a93c8687e06e",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -79,6 +79,26 @@
     {
       "key": "month",
       "value": "2026-10",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "checkout_session_id",
+      "value": "cs_test_a1b2c3d4e5f6",
+      "type": "string"
+    },
+    {
+      "key": "checkout_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "stripe_signature",
+      "value": "test_signature",
       "type": "string"
     }
   ],
@@ -2389,6 +2409,190 @@
               ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"App ratings retrieved successfully.\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"user\": 2,\n      \"user_name\": \"Thomas Client Jr.\",\n      \"image\": \"https://4234cwc7-8004.inc1.devtunnels.ms/media/profile_images/photo.gif\",\n      \"rating\": 5,\n      \"review\": \"Great app!\",\n      \"created_at\": \"2026-09-30T05:36:52.330371Z\",\n      \"updated_at\": \"2026-09-30T05:36:52.330371Z\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Client - Booking & Payments",
+      "item": [
+        {
+          "name": "Book a Coach Service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_id\": 1,\n  \"booking_date\": \"2026-11-05\",\n  \"booking_time\": \"03:00 PM\",\n  \"referral_code\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/book-service",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "book-service"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Book Coach Service Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"code\": 201,\n  \"status\": 201,\n  \"message\": \"Service order created successfully.\",\n  \"data\": {\n    \"id\": 1,\n    \"user\": {\n      \"id\": 2,\n      \"full_name\": \"Thomas Client Jr.\",\n      \"email\": \"client@example.com\",\n      \"phone_number\": \"+1234567890\"\n    },\n    \"coach\": {\n      \"id\": 1,\n      \"full_name\": \"Sarah Chen\",\n      \"email\": \"coach@example.com\",\n      \"phone_number\": \"\",\n      \"profile_photo\": null,\n      \"about\": \"I help founders scale.\"\n    },\n    \"service\": {\n      \"id\": 1,\n      \"title\": \"Strategy Session\",\n      \"description\": \"1-on-1 strategy coaching call.\",\n      \"service_type\": \"one_time\",\n      \"session_format\": \"video\",\n      \"session_duration\": 60,\n      \"price\": \"160.00\",\n      \"currency\": \"USD\",\n      \"booking_type\": \"instant\",\n      \"session_url\": null,\n      \"category\": {\n        \"id\": 1,\n        \"name\": \"Business\",\n        \"description\": \"\"\n      }\n    },\n    \"product\": null,\n    \"order_type\": \"service\",\n    \"booking_date\": \"2026-11-05\",\n    \"booking_time\": \"03:00 PM\",\n    \"amount\": \"160.00\",\n    \"client_fee\": \"4.80\",\n    \"client_fee_percent\": \"3.00\",\n    \"total_amount\": \"164.80\",\n    \"coach_fee\": \"8.00\",\n    \"coach_fee_percent\": \"5.00\",\n    \"coach_earning\": \"152.00\",\n    \"currency\": \"USD\",\n    \"status\": \"pending\",\n    \"payment_status\": \"pending\",\n    \"payment_method\": null,\n    \"transaction_id\": null,\n    \"is_on_call\": false,\n    \"payment_due_at\": \"2026-11-05T03:15:00Z\",\n    \"created_at\": \"2026-10-29T10:00:00Z\",\n    \"updated_at\": \"2026-10-29T10:00:00Z\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data && jsonData.data.id) {",
+                  "    pm.collectionVariables.set(\"booking_id\", jsonData.data.id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Stripe Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": 1,\n  \"success_url\": \"https://yourapp.com/payment/success?session_id={CHECKOUT_SESSION_ID}\",\n  \"cancel_url\": \"https://yourapp.com/payment/cancel\",\n  \"credit_used\": \"0.00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/stripe/create-checkout-session",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "stripe",
+                "create-checkout-session"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Create Checkout Session Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"code\": 200,\n  \"status\": 200,\n  \"message\": \"Checkout session created successfully.\",\n  \"data\": {\n    \"session_id\": \"cs_test_a1b2c3d4e5f6\",\n    \"checkout_url\": \"https://checkout.stripe.com/c/pay/cs_test_a1b2c3d4e5f6\",\n    \"is_free\": false,\n    \"booking_id\": 1,\n    \"price\": \"160.00\",\n    \"client_fee\": \"4.80\",\n    \"client_fee_percent\": \"3.00\",\n    \"total\": \"164.80\",\n    \"credit_used\": \"0.00\",\n    \"payable\": \"164.80\",\n    \"currency\": \"USD\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "    if (jsonData.data.session_id) {",
+                  "        pm.collectionVariables.set(\"checkout_session_id\", jsonData.data.session_id);",
+                  "    }",
+                  "    if (jsonData.data.checkout_url) {",
+                  "        pm.collectionVariables.set(\"checkout_url\", jsonData.data.checkout_url);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "stripe-signature",
+                "value": "{{stripe_signature}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_test_123456789\",\n  \"type\": \"checkout.session.completed\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"cs_test_a1b2c3d4e5f6\",\n      \"payment_intent\": \"pi_test_123456789\",\n      \"payment_status\": \"paid\",\n      \"metadata\": {\n        \"booking_id\": \"1\"\n      }\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/stripe/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "stripe",
+                "webhook"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Stripe Webhook Handled Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"received\": true,\n  \"event\": \"checkout.session.completed\",\n  \"booking_id\": 1,\n  \"status\": \"confirmed\",\n  \"payment_status\": \"paid\",\n  \"transaction_id\": \"pi_test_123456789\"\n}"
             }
           ]
         }
