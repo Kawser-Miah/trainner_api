@@ -89,6 +89,7 @@ class Settings(BaseSettings):
     app_ratings_list_prefix: str = "/app-ratings-list"
     payments_prefix: str = "/payments"
     book_service_prefix: str = "/book-service"
+    product_purchase_prefix: str = "/products/purchase"
     stripe_prefix: str = "/stripe"
     create_checkout_session_prefix: str = "/create-checkout-session"
     stripe_webhook_prefix: str = "/webhook"

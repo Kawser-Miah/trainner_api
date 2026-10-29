@@ -189,6 +189,7 @@ def build_postman_collection():
 
     # Client Booking & Payments URLs
     client_book_service_url = build_url_dict(f"{settings.payments_prefix}{settings.book_service_prefix}")
+    client_product_purchase_url = build_url_dict(f"{settings.payments_prefix}{settings.product_purchase_prefix}")
     client_stripe_checkout_url = build_url_dict(f"{settings.payments_prefix}{settings.stripe_prefix}{settings.create_checkout_session_prefix}")
     client_stripe_webhook_url = build_url_dict(f"{settings.payments_prefix}{settings.stripe_prefix}{settings.stripe_webhook_prefix}")
 
@@ -2491,6 +2492,91 @@ def build_postman_collection():
                                     "payment_due_at": "2026-11-05T03:15:00Z",
                                     "created_at": "2026-10-29T10:00:00Z",
                                     "updated_at": "2026-10-29T10:00:00Z",
+                                },
+                            },
+                        ),
+                        "event": [
+                            {
+                                "listen": "test",
+                                "script": {
+                                    "exec": [
+                                        "var jsonData = pm.response.json();",
+                                        "if (jsonData && jsonData.data && jsonData.data.id) {",
+                                        '    pm.collectionVariables.set("booking_id", jsonData.data.id.toString());',
+                                        "}",
+                                    ],
+                                    "type": "text/javascript",
+                                },
+                            }
+                        ],
+                    },
+                    {
+                        "name": "Purchase Digital Product",
+                        "request": {
+                            "method": "POST",
+                            "header": [
+                                {"key": "Content-Type", "value": "application/json"},
+                                {"key": "Authorization", "value": "Bearer {{access_token}}"},
+                            ],
+                            "body": {
+                                "mode": "raw",
+                                "raw": "{\n  \"product_id\": {{product_id}},\n  \"referral_code\": \"\"\n}",
+                            },
+                            "url": client_product_purchase_url,
+                        },
+                        "response": make_response_example(
+                            "Purchase Digital Product Success",
+                            201,
+                            {
+                                "success": True,
+                                "status": 201,
+                                "message": "Product purchase order created successfully. Proceed to payment.",
+                                "data": {
+                                    "id": 13,
+                                    "user": {
+                                        "id": 3,
+                                        "full_name": "Jane Buyer",
+                                        "email": "jane@coach.test",
+                                        "phone_number": "",
+                                    },
+                                    "coach": {
+                                        "id": 4,
+                                        "full_name": "Sarah Chen",
+                                        "email": "coach@coach.test",
+                                        "phone_number": "",
+                                        "profile_photo": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/profile/sarah.gif",
+                                        "about": "I help founders scale.",
+                                    },
+                                    "service": None,
+                                    "product": {
+                                        "id": 1,
+                                        "title": "Founder Playbook",
+                                        "description": "A practical guide.",
+                                        "price": "25.00",
+                                        "Thumbnail": "https://4234cwc7-8004.inc1.devtunnels.ms/media/coach/products/cover.gif",
+                                    },
+                                    "order_type": "product",
+                                    "booking_date": None,
+                                    "booking_time": None,
+                                    "amount": "25.00",
+                                    "client_fee": "0.00",
+                                    "client_fee_percent": "0.00",
+                                    "total_amount": "25.00",
+                                    "coach_fee": "1.25",
+                                    "coach_fee_percent": "5.00",
+                                    "coach_earning": "23.75",
+                                    "currency": "USD",
+                                    "status": "pending",
+                                    "payment_status": "pending",
+                                    "payment_method": None,
+                                    "transaction_id": None,
+                                    "notes": None,
+                                    "can_join": False,
+                                    "coach_message": "",
+                                    "is_on_call": False,
+                                    "payment_due_at": None,
+                                    "created_at": "2026-10-27T10:53:54.924385+06:00",
+                                    "updated_at": "2026-10-27T10:53:54.930773+06:00",
                                 },
                             },
                         ),

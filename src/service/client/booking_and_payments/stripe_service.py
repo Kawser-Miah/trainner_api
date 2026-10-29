@@ -103,7 +103,7 @@ async def create_stripe_checkout_session_service(
         if settings.stripe_secret_key and settings.stripe_secret_key.strip():
             stripe.api_key = settings.stripe_secret_key.strip()
             unit_amount_cents = int(round(payable_dec * 100))
-            service_title = order.service.title if order.service else "Coaching Session"
+            service_title = order.service.title if order.service else (order.product.title if order.product else "Coaching Session")
             coach_name = order.coach.full_name if order.coach else "Coach"
 
             try:

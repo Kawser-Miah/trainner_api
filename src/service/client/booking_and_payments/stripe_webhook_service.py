@@ -123,6 +123,30 @@ async def handle_stripe_webhook_service(
             order.payment_method = "stripe"
             if trx_id:
                 order.transaction_id = trx_id
+            if order.order_type == "product" and order.product_id:
+                from src.models.client.product_purchase import ProductPurchase
+                existing_purchase = (
+                    db.query(ProductPurchase)
+                    .filter(
+                        ProductPurchase.user_id == order.user_id,
+                        ProductPurchase.product_id == order.product_id,
+                    )
+                    .first()
+                )
+                if not existing_purchase:
+                    new_purchase = ProductPurchase(
+                        user_id=order.user_id,
+                        product_id=order.product_id,
+                        price_paid=order.amount,
+                    )
+                    db.add(new_purchase)
+                if order.product:
+                    try:
+                        order.product.sales_count = (order.product.sales_count or 0) + 1
+                        current_rev = float(order.product.revenue or "0.00")
+                        order.product.revenue = f"{current_rev + float(order.amount):.2f}"
+                    except Exception:
+                        pass
             db.commit()
             return {
                 "received": True,
