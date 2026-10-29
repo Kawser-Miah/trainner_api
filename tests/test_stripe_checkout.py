@@ -394,7 +394,8 @@ def test_create_checkout_session_already_paid(client, db_session, test_setup):
     assert res.json()["error"] == "ALREADY_PAID"
 
 
-def test_stripe_webhook_checkout_session_completed(client, db_session, test_setup):
+def test_stripe_webhook_checkout_session_completed(client, db_session, test_setup, monkeypatch):
+    monkeypatch.setattr("src.service.client.booking_and_payments.stripe_webhook_service.settings.stripe_webhook_secret", "")
     setup = test_setup
     order = ServiceOrder(
         user_id=setup["client_user"].id,
@@ -446,7 +447,8 @@ def test_stripe_webhook_checkout_session_completed(client, db_session, test_setu
     assert order.transaction_id == "pi_test_confirmed_999"
 
 
-def test_stripe_webhook_expired(client, db_session, test_setup):
+def test_stripe_webhook_expired(client, db_session, test_setup, monkeypatch):
+    monkeypatch.setattr("src.service.client.booking_and_payments.stripe_webhook_service.settings.stripe_webhook_secret", "")
     setup = test_setup
     order = ServiceOrder(
         user_id=setup["client_user"].id,
@@ -489,4 +491,60 @@ def test_stripe_webhook_expired(client, db_session, test_setup):
 
     db_session.refresh(order)
     assert order.payment_status == "expired"
+
+
+def test_stripe_webhook_with_stripe_object(client, db_session, test_setup, monkeypatch):
+    import stripe
+    setup = test_setup
+    order = ServiceOrder(
+        user_id=setup["client_user"].id,
+        coach_id=setup["coach_user"].id,
+        coach_profile_id=setup["profile"].id,
+        service_id=setup["service"].id,
+        order_type="service",
+        booking_date="2026-10-29",
+        booking_time="05:00 PM",
+        amount="160.00",
+        total_amount="164.80",
+        status="pending",
+        payment_status="pending",
+        transaction_id="cs_test_stripe_obj_789",
+    )
+    db_session.add(order)
+    db_session.commit()
+    db_session.refresh(order)
+
+    event_obj = stripe.Event.construct_from({
+        "id": "evt_test_789",
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "id": "cs_test_stripe_obj_789",
+                "payment_intent": "pi_test_obj_789",
+                "metadata": {
+                    "booking_id": str(order.id),
+                },
+            }
+        },
+    }, "key")
+
+    monkeypatch.setattr(
+        "src.service.client.booking_and_payments.stripe_webhook_service.stripe.Webhook.construct_event",
+        lambda payload, sig_header, secret: event_obj,
+    )
+
+    res = client.post(
+        "/payments/stripe/webhook",
+        content=b"dummy_payload",
+        headers={"stripe-signature": "test_sig"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["received"] is True
+    assert data["booking_id"] == order.id
+
+    db_session.refresh(order)
+    assert order.payment_status == "paid"
+    assert order.status == "confirmed"
+
 

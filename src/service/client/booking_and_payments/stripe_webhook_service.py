@@ -19,11 +19,12 @@ def verify_and_construct_webhook_event(payload_bytes: bytes, sig_header: str | N
                 error="MISSING_SIGNATURE",
             )
         try:
-            return stripe.Webhook.construct_event(
+            event = stripe.Webhook.construct_event(
                 payload=payload_bytes,
                 sig_header=sig_header,
                 secret=settings.stripe_webhook_secret.strip(),
             )
+            return event.to_dict() if hasattr(event, "to_dict") else event
         except ValueError as e:
             raise AppException(
                 message=f"Invalid webhook payload: {str(e)}",
@@ -53,12 +54,17 @@ async def handle_stripe_webhook_service(
     db: Session,
 ) -> dict:
     event = verify_and_construct_webhook_event(payload_bytes, sig_header)
+    if hasattr(event, "to_dict"):
+        event = event.to_dict()
+
     event_type = event.get("type") if isinstance(event, dict) else getattr(event, "type", "")
     data_object = (
         event.get("data", {}).get("object", {})
         if isinstance(event, dict)
         else getattr(getattr(event, "data", None), "object", {})
     )
+    if hasattr(data_object, "to_dict"):
+        data_object = data_object.to_dict()
 
     if event_type in ["checkout.session.completed", "checkout.session.async_payment_succeeded"]:
         metadata = (
@@ -66,8 +72,10 @@ async def handle_stripe_webhook_service(
             if isinstance(data_object, dict)
             else getattr(data_object, "metadata", {})
         ) or {}
+        if hasattr(metadata, "to_dict"):
+            metadata = metadata.to_dict()
 
-        booking_id = metadata.get("booking_id")
+        booking_id = metadata.get("booking_id") if isinstance(metadata, dict) else getattr(metadata, "booking_id", None)
         if not booking_id:
             client_ref = (
                 data_object.get("client_reference_id")
@@ -92,6 +100,8 @@ async def handle_stripe_webhook_service(
         if payment_intent:
             if isinstance(payment_intent, dict):
                 trx_id = payment_intent.get("id")
+            elif hasattr(payment_intent, "id"):
+                trx_id = getattr(payment_intent, "id")
             else:
                 trx_id = str(payment_intent)
         elif session_id:
@@ -129,7 +139,9 @@ async def handle_stripe_webhook_service(
             if isinstance(data_object, dict)
             else getattr(data_object, "metadata", {})
         ) or {}
-        booking_id = metadata.get("booking_id")
+        if hasattr(metadata, "to_dict"):
+            metadata = metadata.to_dict()
+        booking_id = metadata.get("booking_id") if isinstance(metadata, dict) else getattr(metadata, "booking_id", None)
         if booking_id:
             order = get_service_order_by_id(db=db, order_id=int(booking_id))
             if order and order.payment_status != "paid":
