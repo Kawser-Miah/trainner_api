@@ -1,8 +1,6 @@
-import re
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
-from pathlib import Path
 from typing import Any
 
 from fastapi import Request
@@ -33,6 +31,7 @@ from src.schemas.provider.product.coach_product import (
     DeleteCoachProductDataResponse,
 )
 from src.utils.media import build_media_url, delete_media_file, get_base_url
+from src.utils.uploads import MEDIA_ROOT, save_upload
 
 
 def format_dt(dt: datetime | None) -> str:
@@ -54,48 +53,26 @@ def format_price_string(price: Any) -> str:
 
 
 async def save_product_thumbnail(file: Any) -> str | None:
-    if not file or not hasattr(file, "filename") or not getattr(file, "filename", None):
-        return None
-
-    content = await file.read()
-    if not content or len(content) == 0:
-        return None
-
-    ext = Path(file.filename).suffix or ".jpg"
-    clean_stem = re.sub(r"[^\w\-]", "_", Path(file.filename).stem)
-    unique_name = f"{clean_stem}_{uuid.uuid4().hex[:8]}{ext}"
-
-    dest_dir = Path("media") / "coach" / "products"
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = dest_dir / unique_name
-
-    with open(dest_path, "wb") as f:
-        f.write(content)
-
-    return f"/media/coach/products/{unique_name}"
+    saved = await save_upload(file, kind="image", subfolder="coach/products")
+    return saved.web_path if saved else None
 
 
 async def save_product_book_file(file: Any) -> tuple[str | None, str | None, bytes | None, str | None]:
-    if not file or not hasattr(file, "filename") or not getattr(file, "filename", None):
+    """Store the paid file in the private media root (never served statically)."""
+    saved = await save_upload(file, kind="product_file", subfolder="coach/products/files", private=True)
+    if saved is None:
         return None, None, None, None
 
-    content = await file.read()
-    if not content or len(content) == 0:
-        return None, None, None, None
+    # Only PDFs are inspected for page counts / preview generation, so only they are loaded into memory.
+    content = saved.disk_path.read_bytes() if saved.extension == ".pdf" else None
+    file_type = saved.extension.lstrip(".").upper()
+    return saved.web_path, file_type, content, saved.stem
 
-    suffix = Path(file.filename).suffix or ".bin"
-    file_type = suffix.lstrip(".").upper() or "PDF"
-    clean_stem = re.sub(r"[^\w\-]", "_", Path(file.filename).stem)
-    unique_name = f"{clean_stem}_{uuid.uuid4().hex[:8]}{suffix}"
 
-    dest_dir = Path("media") / "coach" / "products" / "files"
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = dest_dir / unique_name
-
-    with open(dest_path, "wb") as f:
-        f.write(content)
-
-    return f"/media/coach/products/files/{unique_name}", file_type, content, clean_stem
+async def save_product_preview_file(file: Any) -> str | None:
+    """Store an optional preview PDF in the public media root."""
+    saved = await save_upload(file, kind="preview", subfolder="coach/products/previews")
+    return saved.web_path if saved else None
 
 
 def generate_preview_and_page_stats(
@@ -117,31 +94,19 @@ def generate_preview_and_page_stats(
 
             buf = BytesIO()
             writer.write(buf)
-            preview_bytes = buf.getvalue()
 
             preview_filename = f"{clean_stem}_preview_{uuid.uuid4().hex[:8]}.pdf"
-            dest_dir = Path("media") / "coach" / "products" / "files"
+            dest_dir = MEDIA_ROOT / "coach" / "products" / "previews"
             dest_dir.mkdir(parents=True, exist_ok=True)
-            preview_path = dest_dir / preview_filename
-            with open(preview_path, "wb") as f:
-                f.write(preview_bytes)
+            (dest_dir / preview_filename).write_bytes(buf.getvalue())
 
-            return total_pages, preview_count, f"/media/coach/products/files/{preview_filename}"
+            return total_pages, preview_count, f"/media/coach/products/previews/{preview_filename}"
     except Exception:
         pass
 
-    # Fallback for non-standard PDF or test mock content
-    try:
-        preview_filename = f"{clean_stem}_preview_{uuid.uuid4().hex[:8]}.pdf"
-        dest_dir = Path("media") / "coach" / "products" / "files"
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        preview_path = dest_dir / preview_filename
-        with open(preview_path, "wb") as f:
-            f.write(content)
-        return 1, 1, f"/media/coach/products/files/{preview_filename}"
-    except Exception:
-        return 1, 1, None
-
+    # Unparseable PDF: report one page and no preview. The full file must never be
+    # copied into the public media tree as a "preview".
+    return 1, 1, None
 
 
 def build_download_url(product_id: int, request: Request | None) -> str:
@@ -216,9 +181,7 @@ async def create_provider_product(
 
     thumbnail_path = await save_product_thumbnail(thumbnail)
     book_file_path, file_type, book_content, clean_stem = await save_product_book_file(book_file)
-    preview_path, _, _, _ = (
-        await save_product_book_file(preview_file) if preview_file else (None, None, None, None)
-    )
+    preview_path = await save_product_preview_file(preview_file)
 
     if book_content:
         auto_page_count, auto_preview_count, auto_preview_path = generate_preview_and_page_stats(
@@ -349,7 +312,7 @@ async def update_provider_product(
                     new_preview_file_path = auto_preview_path
 
     if preview_file is not None and getattr(preview_file, "filename", None):
-        uploaded_preview, _, _, _ = await save_product_book_file(preview_file)
+        uploaded_preview = await save_product_preview_file(preview_file)
         if uploaded_preview:
             if product.preview_file:
                 delete_media_file(product.preview_file)

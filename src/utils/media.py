@@ -1,6 +1,8 @@
 from pathlib import Path
 from fastapi import Request
 
+from src.utils.uploads import resolve_media_path
+
 
 def get_base_url(request: Request | None) -> str:
     """
@@ -41,21 +43,17 @@ def build_media_url(file_path: str | None, request: Request | None = None) -> st
 def delete_media_file(file_path: str | None) -> bool:
     """
     Safely delete an existing local media file from disk when it is replaced or removed.
+    Only files inside the media roots can be removed.
     """
-    if not file_path:
+    target_path = resolve_media_path(file_path)
+    if target_path is None:
         return False
-
-    if file_path.startswith("http://") or file_path.startswith("https://"):
-        return False
-
-    clean_path = file_path.lstrip("/")
-    target_path = Path(clean_path)
 
     try:
-        if target_path.is_file() and target_path.exists():
+        if target_path.is_file():
             target_path.unlink()
             return True
-    except Exception:
+    except OSError:
         pass
 
     return False

@@ -42,6 +42,12 @@ class Settings(BaseSettings):
 
     
     # API Configuration
+    media_root: str = "media"
+    private_media_root: str = "private_media"
+    max_image_upload_mb: int = 5
+    max_document_upload_mb: int = 10
+    max_video_upload_mb: int = 200
+    max_product_upload_mb: int = 200
     api_prefix: str = "/api"
     authentication_prefix: str = "/auth"
     register_account_prefix: str = "/register"

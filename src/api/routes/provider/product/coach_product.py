@@ -1,4 +1,3 @@
-from pathlib import Path
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -9,6 +8,8 @@ from src.core.database import get_db
 from src.core.dependencies import require_approved_coach
 from src.core.exceptions import CoachProductNotFoundException
 from src.models.accounts.user import User
+from src.utils.uploads import resolve_media_path
+from src.repository.provider.coach_profile.coach_profile_repository import get_coach_profile_by_user_id
 from src.repository.provider.product.coach_product_repository import get_coach_product_by_id
 from src.service.provider.product.coach_product_service import (
     create_provider_product,
@@ -270,15 +271,23 @@ download_router = APIRouter(
 )
 async def download_product_file(
     product_id: int,
+    current_user: User = Depends(require_approved_coach),
     db: Session = Depends(get_db),
 ):
+    # Only the coach who owns the product may fetch the full file through this route;
+    # buyers go through the client download route.
+    profile = get_coach_profile_by_user_id(db, current_user.id)
     product = get_coach_product_by_id(db=db, product_id=product_id)
-    if product is None or not product.book_file:
+    if (
+        profile is None
+        or product is None
+        or product.coach_profile_id != profile.id
+        or not product.book_file
+    ):
         raise CoachProductNotFoundException()
 
-    rel_path = product.book_file.lstrip("/\\")
-    file_path = Path(rel_path)
-    if not file_path.exists():
+    file_path = resolve_media_path(product.book_file)
+    if file_path is None or not file_path.is_file():
         raise CoachProductNotFoundException()
 
     return FileResponse(

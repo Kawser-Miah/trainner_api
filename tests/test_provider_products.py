@@ -171,6 +171,7 @@ def test_create_and_manage_product(test_coach_and_category, coach_headers, db_se
     # 5. Download book file
     download_resp = client.get(
         f"/api/v1/user/digital-product-download/{product_id}/",
+        headers=coach_headers,
     )
     assert download_resp.status_code == 200, download_resp.text
     assert download_resp.content == book_content

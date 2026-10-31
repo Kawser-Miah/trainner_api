@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 import re
 from typing import Any
-import uuid
 
 from fastapi import Request, UploadFile
 from sqlalchemy.orm import Session
@@ -30,6 +29,7 @@ from src.schemas.provider.coach_profile import (
     CoachUserSummaryResponse,
 )
 from src.utils.media import build_media_url, delete_media_file
+from src.utils.uploads import save_upload
 from src.utils.video import extract_video_duration, format_duration
 
 
@@ -44,34 +44,16 @@ def format_dt(dt: datetime | None) -> str:
 async def save_uploaded_file_with_path(
     file: Any,
     subfolder: str,
+    kind: str = "image",
 ) -> tuple[str | None, Path | None]:
-    if file is None:
+    saved = await save_upload(file, kind=kind, subfolder=f"coach/{subfolder}")
+    if saved is None:
         return None, None
-    if not hasattr(file, "filename") or not hasattr(file, "read"):
-        return None, None
-    if not getattr(file, "filename", None):
-        return None, None
-
-    content = await file.read()
-    if not content or len(content) == 0:
-        return None, None
-
-    ext = Path(file.filename).suffix or ".bin"
-    clean_stem = re.sub(r"[^\w\-]", "_", Path(file.filename).stem)
-    unique_name = f"{clean_stem}_{uuid.uuid4().hex[:8]}{ext}"
-
-    dest_dir = Path("media") / "coach" / subfolder
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = dest_dir / unique_name
-
-    with open(dest_path, "wb") as f:
-        f.write(content)
-
-    return f"/media/coach/{subfolder}/{unique_name}", dest_path
+    return saved.web_path, saved.disk_path
 
 
-async def save_uploaded_file(file: Any, subfolder: str) -> str | None:
-    web_path, _ = await save_uploaded_file_with_path(file, subfolder)
+async def save_uploaded_file(file: Any, subfolder: str, kind: str = "document") -> str | None:
+    web_path, _ = await save_uploaded_file_with_path(file, subfolder, kind)
     return web_path
 
 
@@ -292,7 +274,7 @@ async def parse_coach_form_data(request: Request) -> dict[str, Any]:
         profile_photo_file, "profile"
     )
     intro_video_path, disk_video_path = await save_uploaded_file_with_path(
-        intro_video_file, "videos"
+        intro_video_file, "videos", "video"
     )
     intro_thumb_path, _ = await save_uploaded_file_with_path(
         intro_thumb_file, "videos/thumbnails"

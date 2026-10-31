@@ -10,7 +10,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from fastapi.staticfiles import StaticFiles
+from src.utils.static_files import PublicMediaFiles
+from src.utils.uploads import MEDIA_ROOT, PRIVATE_MEDIA_ROOT
 from src.core.config import settings
 from src.api import router
 from src.core.exceptions import AppException
@@ -99,19 +100,22 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Mount static media files
-media_dir = Path("media")
-media_dir.mkdir(parents=True, exist_ok=True)
-(media_dir / "profile_images").mkdir(parents=True, exist_ok=True)
-(media_dir / "coach" / "profile").mkdir(parents=True, exist_ok=True)
-(media_dir / "coach" / "videos" / "thumbnails").mkdir(parents=True, exist_ok=True)
-(media_dir / "coach" / "certificates").mkdir(parents=True, exist_ok=True)
-(media_dir / "coach" / "qualifications").mkdir(parents=True, exist_ok=True)
-(media_dir / "coach" / "blogs").mkdir(parents=True, exist_ok=True)
-(media_dir / "coach" / "products").mkdir(parents=True, exist_ok=True)
-(media_dir / "coach" / "products" / "files").mkdir(parents=True, exist_ok=True)
-(media_dir / "category_images").mkdir(parents=True, exist_ok=True)
-app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
+# Mount static media files (public only; paid product files live in the private media root)
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+PRIVATE_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+for sub in (
+    "profile_images",
+    "coach/profile",
+    "coach/videos/thumbnails",
+    "coach/certificates",
+    "coach/qualifications",
+    "coach/blogs",
+    "coach/products",
+    "coach/products/previews",
+    "category_images",
+):
+    (MEDIA_ROOT / sub).mkdir(parents=True, exist_ok=True)
+app.mount("/media", PublicMediaFiles(directory=str(MEDIA_ROOT)), name="media")
 
 # Include API routers
 app.include_router(

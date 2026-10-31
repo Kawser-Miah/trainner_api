@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Path, Response, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from src.core.config import settings
@@ -31,15 +32,21 @@ async def download_digital_product(
     current_user: User = Depends(require_client_role),
     db: Session = Depends(get_db),
 ):
-    file_bytes, filename = await download_digital_product_file_service(
+    payload = await download_digital_product_file_service(
         product_id=product_id,
         db=db,
         current_user=current_user,
     )
+    if payload.path is not None:
+        return FileResponse(
+            path=str(payload.path),
+            filename=payload.filename,
+            media_type=payload.media_type,
+        )
     return Response(
-        content=file_bytes,
-        media_type="application/pdf",
+        content=payload.content,
+        media_type=payload.media_type,
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f'attachment; filename="{payload.filename}"',
         },
     )

@@ -1,5 +1,3 @@
-import re
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -31,6 +29,7 @@ from src.schemas.provider.blog.coach_blog import (
     DeleteCoachBlogDataResponse,
 )
 from src.utils.media import build_media_url, delete_media_file
+from src.utils.uploads import save_upload
 
 
 def format_dt(dt: datetime | None) -> str:
@@ -42,25 +41,8 @@ def format_dt(dt: datetime | None) -> str:
 
 
 async def save_blog_image(file: Any) -> str | None:
-    if not file or not hasattr(file, "filename") or not getattr(file, "filename", None):
-        return None
-
-    content = await file.read()
-    if not content or len(content) == 0:
-        return None
-
-    ext = Path(file.filename).suffix or ".jpg"
-    clean_stem = re.sub(r"[^\w\-]", "_", Path(file.filename).stem)
-    unique_name = f"{clean_stem}_{uuid.uuid4().hex[:8]}{ext}"
-
-    dest_dir = Path("media") / "coach" / "blogs"
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = dest_dir / unique_name
-
-    with open(dest_path, "wb") as f:
-        f.write(content)
-
-    return f"/media/coach/blogs/{unique_name}"
+    saved = await save_upload(file, kind="image", subfolder="coach/blogs")
+    return saved.web_path if saved else None
 
 
 def map_blog_to_response(

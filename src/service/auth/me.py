@@ -1,12 +1,11 @@
 from datetime import timezone
-from pathlib import Path
-import re
 from fastapi import Request, UploadFile
 from sqlalchemy.orm import Session
 
 from src.models.accounts.user import User
 from src.schemas.auth.me import UserProfileResponse
-from src.utils.media import build_media_url, get_base_url
+from src.utils.media import build_media_url, delete_media_file, get_base_url
+from src.utils.uploads import save_upload
 
 # Alias build_image_url to centralized build_media_url for backward compatibility
 build_image_url = build_media_url
@@ -61,21 +60,24 @@ async def update_user_profile(
     if address is not None:
         user.address = address.strip() if address.strip() else None
 
-    if image is not None and getattr(image, "filename", None):
-        raw_name = Path(image.filename).name
-        if raw_name:
-            clean_name = re.sub(r"[^\w\.-]", "_", raw_name)
-            media_dir = Path("media") / "profile_images"
-            media_dir.mkdir(parents=True, exist_ok=True)
-            file_path = media_dir / clean_name
+    saved = await save_upload(image, kind="image", subfolder="profile_images")
+    replaced_photo = None
+    if saved:
+        replaced_photo = user.photo_url
+        user.photo_url = saved.web_path
 
-            content = await image.read()
-            if content and len(content) > 0:
-                with open(file_path, "wb") as f:
-                    f.write(content)
-                user.photo_url = f"/media/profile_images/{clean_name}"
-
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        # Don't leave the new file orphaned if the row could not be saved.
+        db.rollback()
+        if saved:
+            delete_media_file(saved.web_path)
+        raise
     db.refresh(user)
+
+    # Remove the old photo only once the new one is safely stored.
+    if replaced_photo:
+        delete_media_file(replaced_photo)
 
     return get_user_profile(user=user, request=request)
