@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "dce1bd96-5395-4093-b1ee-301d09cfda21",
+    "_postman_id": "837d5070-6033-43c9-9ee3-6997f1392e9b",
     "name": "Personal Project",
     "description": "Postman Collection for Coach Hub API Backend mapped 1:1 with Pydantic Schemas and Settings",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -2523,6 +2523,47 @@
               ],
               "cookie": [],
               "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"User bookings retrieved successfully.\",\n  \"data\": [\n    {\n      \"id\": 4,\n      \"provider_user_id\": 4,\n      \"coach_profile_id\": 1,\n      \"coach_name\": \"Sarah Chen\",\n      \"coach_profile_photo\": \"https://example.com/media/coach/profile/sarah.gif\",\n      \"service_id\": 1,\n      \"service_title\": \"Strategy Session\",\n      \"service_category\": \"Business\",\n      \"service_type\": \"one_time\",\n      \"session_format\": \"video\",\n      \"session_duration\": 60,\n      \"can_join\": true,\n      \"preparation_instructions\": \"Write down your top 3 goals\\nBring your latest numbers\",\n      \"booking_date\": \"2026-11-11\",\n      \"booking_time\": \"11:00:00\",\n      \"amount\": \"150.00\",\n      \"currency\": \"USD\",\n      \"cancellation_policy\": \"flexible\",\n      \"status\": \"confirmed\",\n      \"payment_status\": \"paid\",\n      \"payment_method\": \"stripe\",\n      \"is_rescheduled\": false,\n      \"notes\": null,\n      \"coach_message\": \"\",\n      \"has_reviewed\": false,\n      \"can_cancel\": true,\n      \"can_reschedule\": true\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Booking Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/user-booking-detail/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "user-booking-detail",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Get one of the authenticated client's service bookings."
+          },
+          "response": [
+            {
+              "name": "Booking Detail Success",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"status\": 200,\n  \"message\": \"Booking details retrieved successfully.\",\n  \"data\": {\n    \"id\": 3,\n    \"provider_user_id\": 4,\n    \"coach_profile_id\": 1,\n    \"coach_name\": \"Sarah Chen\",\n    \"coach_profile_photo\": \"https://example.com/media/coach/profile/sarah.gif\",\n    \"service_id\": 1,\n    \"service_title\": \"Strategy Session\",\n    \"service_category\": \"Business\",\n    \"service_type\": \"one_time\",\n    \"session_format\": \"video\",\n    \"session_duration\": 60,\n    \"can_join\": true,\n    \"preparation_instructions\": \"Write down your top 3 goals\\nBring your latest numbers\",\n    \"booking_date\": \"2026-11-10\",\n    \"booking_time\": \"11:00:00\",\n    \"amount\": \"150.00\",\n    \"currency\": \"USD\",\n    \"cancellation_policy\": \"flexible\",\n    \"status\": \"confirmed\",\n    \"payment_status\": \"paid\",\n    \"payment_method\": \"stripe\",\n    \"is_rescheduled\": false,\n    \"notes\": null,\n    \"coach_message\": \"\",\n    \"has_reviewed\": false,\n    \"can_cancel\": true,\n    \"can_reschedule\": true\n  }\n}"
             }
           ]
         },

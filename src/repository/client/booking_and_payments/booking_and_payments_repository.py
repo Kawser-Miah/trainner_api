@@ -125,3 +125,24 @@ def get_reviewed_coach_profile_ids(
         .all()
     )
     return {row[0] for row in rows}
+
+
+def get_user_service_order_by_id(
+    db: Session,
+    user_id: int,
+    order_id: int,
+) -> ServiceOrder | None:
+    return (
+        db.query(ServiceOrder)
+        .options(
+            joinedload(ServiceOrder.coach),
+            joinedload(ServiceOrder.coach_profile),
+            joinedload(ServiceOrder.service).joinedload(CoachService.category),
+        )
+        .filter(
+            ServiceOrder.id == order_id,
+            ServiceOrder.user_id == user_id,
+            ServiceOrder.order_type == "service",
+        )
+        .first()
+    )

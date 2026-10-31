@@ -8,6 +8,7 @@ from src.models.accounts.user import User
 from src.models.client.service_order import ServiceOrder
 from src.repository.client.booking_and_payments.booking_and_payments_repository import (
     get_reviewed_coach_profile_ids,
+    get_user_service_order_by_id,
     get_user_service_orders,
 )
 from src.schemas.client.booking_and_payments.user_booking_schemas import UserBookingItem
@@ -60,6 +61,53 @@ def _matches(order: ServiceOrder, filters: set[str], now: datetime) -> bool:
     return False
 
 
+def _build_booking_item(
+    order: ServiceOrder,
+    reviewed: set[int],
+    now: datetime,
+    request: Request | None,
+) -> UserBookingItem:
+    service = order.service
+    coach = order.coach
+    coach_profile = order.coach_profile
+    start = _booking_start(order)
+    is_active = order.status in UPCOMING_STATUSES and (start is None or start >= now)
+    return UserBookingItem(
+        id=order.id,
+        provider_user_id=order.coach_id,
+        coach_profile_id=order.coach_profile_id,
+        coach_name=coach.full_name if coach else "",
+        coach_profile_photo=build_media_url(
+            (coach.photo_url if coach else None) or getattr(coach_profile, "profile_photo", None),
+            request,
+        ),
+        service_id=order.service_id,
+        service_title=service.title if service else "",
+        service_category=service.category.name if service and service.category else "",
+        service_type=service.service_type if service else "one_time",
+        session_format=service.session_format if service else "video",
+        session_duration=service.session_duration if service else 60,
+        can_join=order.status == "confirmed" and order.payment_status == "paid",
+        preparation_instructions=(service.preparation_instructions or "") if service else "",
+        booking_date=order.booking_date,
+        booking_time=_format_time(order),
+        amount=order.amount,
+        currency=order.currency,
+        cancellation_policy=(service.cancellation_policy or "") if service else "",
+        status=order.status,
+        payment_status=order.payment_status,
+        payment_method=order.payment_method,
+        # notes / coach_message / reschedules are not stored on service_orders
+        # (columns were dropped in c35ae272d2f9), so defaults are returned.
+        is_rescheduled=False,
+        notes=None,
+        coach_message="",
+        has_reviewed=order.coach_profile_id in reviewed,
+        can_cancel=is_active,
+        can_reschedule=is_active and order.status == "confirmed",
+    )
+
+
 async def get_user_booking_list_service(
     db: Session,
     current_user: User,
@@ -81,47 +129,25 @@ async def get_user_booking_list_service(
         coach_profile_ids=list({order.coach_profile_id for order in orders}),
     )
 
-    items: list[UserBookingItem] = []
-    for order in orders:
-        service = order.service
-        coach = order.coach
-        coach_profile = order.coach_profile
-        start = _booking_start(order)
-        is_active = order.status in UPCOMING_STATUSES and (start is None or start >= now)
-        items.append(
-            UserBookingItem(
-                id=order.id,
-                provider_user_id=order.coach_id,
-                coach_profile_id=order.coach_profile_id,
-                coach_name=coach.full_name if coach else "",
-                coach_profile_photo=build_media_url(
-                    (coach.photo_url if coach else None) or getattr(coach_profile, "profile_photo", None),
-                    request,
-                ),
-                service_id=order.service_id,
-                service_title=service.title if service else "",
-                service_category=service.category.name if service and service.category else "",
-                service_type=service.service_type if service else "one_time",
-                session_format=service.session_format if service else "video",
-                session_duration=service.session_duration if service else 60,
-                can_join=order.status == "confirmed" and order.payment_status == "paid",
-                preparation_instructions=(service.preparation_instructions or "") if service else "",
-                booking_date=order.booking_date,
-                booking_time=_format_time(order),
-                amount=order.amount,
-                currency=order.currency,
-                cancellation_policy=(service.cancellation_policy or "") if service else "",
-                status=order.status,
-                payment_status=order.payment_status,
-                payment_method=order.payment_method,
-                # notes / coach_message / reschedules are not stored on service_orders
-                # (columns were dropped in c35ae272d2f9), so defaults are returned.
-                is_rescheduled=False,
-                notes=None,
-                coach_message="",
-                has_reviewed=order.coach_profile_id in reviewed,
-                can_cancel=is_active,
-                can_reschedule=is_active and order.status == "confirmed",
-            )
+    return [_build_booking_item(order, reviewed, now, request) for order in orders]
+
+
+async def get_user_booking_detail_service(
+    db: Session,
+    current_user: User,
+    booking_id: int,
+    request: Request | None = None,
+) -> UserBookingItem:
+    order = get_user_service_order_by_id(db=db, user_id=current_user.id, order_id=booking_id)
+    if not order:
+        raise AppException(
+            message="Booking not found.",
+            status=404,
+            error="BOOKING_NOT_FOUND",
         )
-    return items
+    reviewed = get_reviewed_coach_profile_ids(
+        db=db,
+        user_id=current_user.id,
+        coach_profile_ids=[order.coach_profile_id],
+    )
+    return _build_booking_item(order, reviewed, datetime.now(), request)
