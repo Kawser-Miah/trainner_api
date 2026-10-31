@@ -87,6 +87,7 @@ class Settings(BaseSettings):
     user_blog_detail_prefix: str = "/blog-detail"
     app_rating_prefix: str = "/app-rating"
     app_ratings_list_prefix: str = "/app-ratings-list"
+    user_booking_list_prefix: str = "/user-booking-list"
     payments_prefix: str = "/payments"
     book_service_prefix: str = "/book-service"
     product_purchase_prefix: str = "/products/purchase"

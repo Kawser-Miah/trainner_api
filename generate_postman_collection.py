@@ -91,6 +91,18 @@ def build_postman_collection():
         "host": ["{{base_url}}"],
         "path": [c_prefix, settings.user_category_list_prefix.strip("/")],
     }
+    client_user_booking_list_url = {
+        "raw": f"{{{{base_url}}}}/{c_prefix}{settings.user_booking_list_prefix}?status=upcoming",
+        "host": ["{{base_url}}"],
+        "path": [c_prefix, settings.user_booking_list_prefix.strip("/")],
+        "query": [
+            {
+                "key": "status",
+                "value": "upcoming",
+                "description": "upcoming|pending|confirmed|completed|cancelled|rejected (comma separated allowed)",
+            }
+        ],
+    }
     client_coach_profile_list_url = {
         "raw": f"{{{{base_url}}}}/{c_prefix}{settings.coach_profile_list_prefix}?search=&category=&ordering=rating",
         "host": ["{{base_url}}"],
@@ -2509,6 +2521,55 @@ def build_postman_collection():
                                 },
                             }
                         ],
+                    },
+                    {
+                        "name": "My Bookings",
+                        "request": {
+                            "method": "GET",
+                            "header": [{"key": "Authorization", "value": "Bearer {{access_token}}"}],
+                            "url": client_user_booking_list_url,
+                            "description": "List the authenticated client's service bookings. status: upcoming|pending|confirmed|completed|cancelled|rejected (comma separated allowed).",
+                        },
+                        "response": make_response_example(
+                            "My Bookings Success",
+                            200,
+                            {
+                                "success": True,
+                                "status": 200,
+                                "message": "User bookings retrieved successfully.",
+                                "data": [
+                                    {
+                                        "id": 4,
+                                        "provider_user_id": 4,
+                                        "coach_profile_id": 1,
+                                        "coach_name": "Sarah Chen",
+                                        "coach_profile_photo": "https://example.com/media/coach/profile/sarah.gif",
+                                        "service_id": 1,
+                                        "service_title": "Strategy Session",
+                                        "service_category": "Business",
+                                        "service_type": "one_time",
+                                        "session_format": "video",
+                                        "session_duration": 60,
+                                        "can_join": True,
+                                        "preparation_instructions": "Write down your top 3 goals\nBring your latest numbers",
+                                        "booking_date": "2026-11-11",
+                                        "booking_time": "11:00:00",
+                                        "amount": "150.00",
+                                        "currency": "USD",
+                                        "cancellation_policy": "flexible",
+                                        "status": "confirmed",
+                                        "payment_status": "paid",
+                                        "payment_method": "stripe",
+                                        "is_rescheduled": False,
+                                        "notes": None,
+                                        "coach_message": "",
+                                        "has_reviewed": False,
+                                        "can_cancel": True,
+                                        "can_reschedule": True,
+                                    }
+                                ],
+                            },
+                        ),
                     },
                     {
                         "name": "Purchase Digital Product",
