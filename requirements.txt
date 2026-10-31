@@ -11,7 +11,7 @@ alembic
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt
-pwdlib
+pwdlib[argon2]
 
 # Validation / Forms / File Uploads
 pydantic
@@ -29,3 +29,6 @@ email-validator
 pytest
 pytest-asyncio
 pypdf
+
+# Payments
+stripe
