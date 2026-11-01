@@ -15,6 +15,13 @@ class ProductPurchase(Base):
         autoincrement=True,
     )
 
+    order_id: Mapped[int | None] = mapped_column(
+        ForeignKey("orders.id", ondelete="SET NULL"),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
+
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -39,5 +46,6 @@ class ProductPurchase(Base):
         nullable=False,
     )
 
+    order = relationship("Order", back_populates="product_purchase")
     user = relationship("User")
     product = relationship("CoachProduct")
