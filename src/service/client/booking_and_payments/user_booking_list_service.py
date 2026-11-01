@@ -16,8 +16,7 @@ from src.service.client.booking_and_payments.availability_validator import parse
 from src.utils.media import build_media_url
 
 VALID_STATUS_FILTERS = {"upcoming", "pending", "confirmed", "completed", "cancelled", "rejected"}
-# "upcoming" = still-active bookings whose session has not started yet.
-UPCOMING_STATUSES = {"pending", "confirmed"}
+CONFIRMED_STATUSES = {"confirmed", "upcoming"}
 
 
 def parse_status_filter(status: str | None) -> set[str]:
@@ -50,14 +49,15 @@ def _format_time(order: ServiceOrder) -> str | None:
     return start.strftime("%H:%M:%S") if start else order.booking_time
 
 
-def _matches(order: ServiceOrder, filters: set[str], now: datetime) -> bool:
+def _matches(order: ServiceOrder, filters: set[str]) -> bool:
+    if order.payment_status != "paid":
+        return False
     if not filters:
         return True
     if order.status in filters:
         return True
-    if "upcoming" in filters and order.status in UPCOMING_STATUSES:
-        start = _booking_start(order)
-        return start is not None and start >= now
+    if ("upcoming" in filters or "confirmed" in filters) and order.status in CONFIRMED_STATUSES:
+        return True
     return False
 
 
@@ -71,7 +71,7 @@ def _build_booking_item(
     coach = order.coach
     coach_profile = order.coach_profile
     start = _booking_start(order)
-    is_active = order.status in UPCOMING_STATUSES and (start is None or start >= now)
+    is_active = order.status in CONFIRMED_STATUSES and (start is None or start >= now)
     return UserBookingItem(
         id=order.id,
         provider_user_id=order.coach_id,
@@ -87,7 +87,7 @@ def _build_booking_item(
         service_type=service.service_type if service else "one_time",
         session_format=service.session_format if service else "video",
         session_duration=service.session_duration if service else 60,
-        can_join=order.status == "confirmed" and order.payment_status == "paid",
+        can_join=order.status in CONFIRMED_STATUSES and order.payment_status == "paid",
         preparation_instructions=(service.preparation_instructions or "") if service else "",
         booking_date=order.booking_date,
         booking_time=_format_time(order),
@@ -104,7 +104,7 @@ def _build_booking_item(
         coach_message="",
         has_reviewed=order.coach_profile_id in reviewed,
         can_cancel=is_active,
-        can_reschedule=is_active and order.status == "confirmed",
+        can_reschedule=is_active,
     )
 
 
@@ -117,11 +117,23 @@ async def get_user_booking_list_service(
     filters = parse_status_filter(status)
     db_statuses = None
     if filters:
-        db_statuses = list((filters - {"upcoming"}) | (UPCOMING_STATUSES if "upcoming" in filters else set()))
+        db_statuses_set = set()
+        for f in filters:
+            if f in {"upcoming", "confirmed"}:
+                db_statuses_set.add("confirmed")
+                db_statuses_set.add("upcoming")
+            else:
+                db_statuses_set.add(f)
+        db_statuses = list(db_statuses_set)
 
-    orders = get_user_service_orders(db=db, user_id=current_user.id, statuses=db_statuses)
+    orders = get_user_service_orders(
+        db=db,
+        user_id=current_user.id,
+        statuses=db_statuses,
+        payment_status="paid",
+    )
     now = datetime.now()
-    orders = [order for order in orders if _matches(order, filters, now)]
+    orders = [order for order in orders if _matches(order, filters)]
 
     reviewed = get_reviewed_coach_profile_ids(
         db=db,
@@ -138,7 +150,12 @@ async def get_user_booking_detail_service(
     booking_id: int,
     request: Request | None = None,
 ) -> UserBookingItem:
-    order = get_user_service_order_by_id(db=db, user_id=current_user.id, order_id=booking_id)
+    order = get_user_service_order_by_id(
+        db=db,
+        user_id=current_user.id,
+        order_id=booking_id,
+        payment_status="paid",
+    )
     if not order:
         raise AppException(
             message="Booking not found.",
