@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from src.core.config import settings
 from src.core.exceptions import AppException
 from src.models.accounts.user import User
-from src.models.client.service_order import ServiceOrder
+from src.models.client.order import Order
+from src.models.client.service_booking import ServiceBooking
 from src.repository.client.booking_and_payments.booking_and_payments_repository import (
     create_service_order,
     get_coach_orders_for_date,
@@ -136,15 +137,11 @@ async def book_service_service(
     payment_due_at = now_utc + timedelta(minutes=settings.booking_payment_timeout_minutes)
 
     # 7. Persist order
-    new_order = ServiceOrder(
+    new_order = Order(
         user_id=current_user.id,
         coach_id=coach_user.id,
         coach_profile_id=coach_profile.id,
-        service_id=service.id,
-        product_id=None,
         order_type="service",
-        booking_date=payload.booking_date,
-        booking_time=payload.booking_time,
         referral_code=payload.referral_code or "",
         amount=amount_str,
         client_fee=client_fee_str,
@@ -158,6 +155,11 @@ async def book_service_service(
         payment_status="pending",
         payment_method=None,
         transaction_id=None,
+    )
+    new_order.service_booking = ServiceBooking(
+        service_id=service.id,
+        booking_date=payload.booking_date,
+        booking_time=payload.booking_time,
         is_on_call=False,
         payment_due_at=payment_due_at,
     )

@@ -1,5 +1,8 @@
 from sqlalchemy.orm import Session, joinedload
 
+from src.models.client.order import Order
+from src.models.client.product_purchase import ProductPurchase
+from src.models.client.service_booking import ServiceBooking
 from src.models.client.service_order import ServiceOrder
 from src.models.provider.coach_profile import CoachProfile, CoachReview
 from src.models.provider.product import CoachProduct
@@ -35,14 +38,17 @@ def get_coach_orders_for_date(
     db: Session,
     coach_profile_id: int,
     booking_date: str,
-) -> list[ServiceOrder]:
+) -> list[Order]:
     return (
-        db.query(ServiceOrder)
-        .options(joinedload(ServiceOrder.service))
+        db.query(Order)
+        .join(Order.service_booking)
+        .options(
+            joinedload(Order.service_booking).joinedload(ServiceBooking.service),
+        )
         .filter(
-            ServiceOrder.coach_profile_id == coach_profile_id,
-            ServiceOrder.booking_date == booking_date,
-            ServiceOrder.status.notin_(["cancelled", "rejected", "expired"]),
+            Order.coach_profile_id == coach_profile_id,
+            ServiceBooking.booking_date == booking_date,
+            Order.status.notin_(["cancelled", "rejected", "expired"]),
         )
         .all()
     )
@@ -52,37 +58,40 @@ def get_coach_orders_for_month(
     db: Session,
     coach_profile_id: int,
     month_prefix: str,
-) -> list[ServiceOrder]:
+) -> list[Order]:
     return (
-        db.query(ServiceOrder)
-        .options(joinedload(ServiceOrder.service))
+        db.query(Order)
+        .join(Order.service_booking)
+        .options(
+            joinedload(Order.service_booking).joinedload(ServiceBooking.service),
+        )
         .filter(
-            ServiceOrder.coach_profile_id == coach_profile_id,
-            ServiceOrder.booking_date.startswith(month_prefix),
-            ServiceOrder.status.notin_(["cancelled", "rejected", "expired"]),
+            Order.coach_profile_id == coach_profile_id,
+            ServiceBooking.booking_date.startswith(month_prefix),
+            Order.status.notin_(["cancelled", "rejected", "expired"]),
         )
         .all()
     )
 
 
-def create_service_order(db: Session, order: ServiceOrder) -> ServiceOrder:
+def create_service_order(db: Session, order: Order) -> Order:
     db.add(order)
     db.commit()
     db.refresh(order)
     return order
 
 
-def get_service_order_by_id(db: Session, order_id: int) -> ServiceOrder | None:
+def get_service_order_by_id(db: Session, order_id: int) -> Order | None:
     return (
-        db.query(ServiceOrder)
+        db.query(Order)
         .options(
-            joinedload(ServiceOrder.user),
-            joinedload(ServiceOrder.coach),
-            joinedload(ServiceOrder.coach_profile),
-            joinedload(ServiceOrder.service).joinedload(CoachService.category),
-            joinedload(ServiceOrder.product),
+            joinedload(Order.user),
+            joinedload(Order.coach),
+            joinedload(Order.coach_profile),
+            joinedload(Order.service_booking).joinedload(ServiceBooking.service).joinedload(CoachService.category),
+            joinedload(Order.product_purchase).joinedload(ProductPurchase.product),
         )
-        .filter(ServiceOrder.id == order_id)
+        .filter(Order.id == order_id)
         .first()
     )
 
@@ -91,22 +100,23 @@ def get_user_service_orders(
     db: Session,
     user_id: int,
     statuses: list[str] | None = None,
-) -> list[ServiceOrder]:
+) -> list[Order]:
     query = (
-        db.query(ServiceOrder)
+        db.query(Order)
+        .join(Order.service_booking)
         .options(
-            joinedload(ServiceOrder.coach),
-            joinedload(ServiceOrder.coach_profile),
-            joinedload(ServiceOrder.service).joinedload(CoachService.category),
+            joinedload(Order.coach),
+            joinedload(Order.coach_profile),
+            joinedload(Order.service_booking).joinedload(ServiceBooking.service).joinedload(CoachService.category),
         )
         .filter(
-            ServiceOrder.user_id == user_id,
-            ServiceOrder.order_type == "service",
+            Order.user_id == user_id,
+            Order.order_type == "service",
         )
     )
     if statuses:
-        query = query.filter(ServiceOrder.status.in_(statuses))
-    return query.order_by(ServiceOrder.id.desc()).all()
+        query = query.filter(Order.status.in_(statuses))
+    return query.order_by(Order.id.desc()).all()
 
 
 def get_reviewed_coach_profile_ids(
@@ -131,18 +141,19 @@ def get_user_service_order_by_id(
     db: Session,
     user_id: int,
     order_id: int,
-) -> ServiceOrder | None:
+) -> Order | None:
     return (
-        db.query(ServiceOrder)
+        db.query(Order)
+        .join(Order.service_booking)
         .options(
-            joinedload(ServiceOrder.coach),
-            joinedload(ServiceOrder.coach_profile),
-            joinedload(ServiceOrder.service).joinedload(CoachService.category),
+            joinedload(Order.coach),
+            joinedload(Order.coach_profile),
+            joinedload(Order.service_booking).joinedload(ServiceBooking.service).joinedload(CoachService.category),
         )
         .filter(
-            ServiceOrder.id == order_id,
-            ServiceOrder.user_id == user_id,
-            ServiceOrder.order_type == "service",
+            Order.id == order_id,
+            Order.user_id == user_id,
+            Order.order_type == "service",
         )
         .first()
     )

@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from src.core.config import settings
 from src.core.exceptions import AppException
 from src.models.accounts.user import User
-from src.models.client.service_order import ServiceOrder
+from src.models.client.order import Order
+from src.models.client.product_purchase import ProductPurchase
 from src.repository.client.booking_and_payments.booking_and_payments_repository import (
     create_service_order,
     get_product_for_purchase,
@@ -110,15 +111,11 @@ async def purchase_product_service(
     currency_str = getattr(product, "currency", "USD") or "USD"
 
     # 5. Persist order
-    new_order = ServiceOrder(
+    new_order = Order(
         user_id=current_user.id,
         coach_id=coach_user.id,
         coach_profile_id=coach_profile.id,
-        service_id=None,
-        product_id=product.id,
         order_type="product",
-        booking_date=None,
-        booking_time=None,
         referral_code=payload.referral_code or "",
         amount=amount_str,
         client_fee=client_fee_str,
@@ -132,9 +129,13 @@ async def purchase_product_service(
         payment_status="pending",
         payment_method=None,
         transaction_id=None,
-        is_on_call=False,
-        payment_due_at=None,
     )
+    new_purchase = ProductPurchase(
+        user_id=current_user.id,
+        product_id=product.id,
+        price_paid=amount_str,
+    )
+    new_order.product_purchase = new_purchase
     created_order = create_service_order(db=db, order=new_order)
 
     # 6. Build response

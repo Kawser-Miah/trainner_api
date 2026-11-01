@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from src.core.config import settings
 from src.core.exceptions import AppException
-from src.models.client.service_order import ServiceOrder
+from src.models.client.order import Order
 from src.repository.client.booking_and_payments.booking_and_payments_repository import (
     get_service_order_by_id,
 )
@@ -112,8 +112,8 @@ async def handle_stripe_webhook_service(
             order = get_service_order_by_id(db=db, order_id=int(booking_id))
         elif session_id:
             order = (
-                db.query(ServiceOrder)
-                .filter(ServiceOrder.transaction_id == session_id)
+                db.query(Order)
+                .filter(Order.transaction_id == session_id)
                 .first()
             )
 
