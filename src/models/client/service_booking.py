@@ -44,6 +44,12 @@ class ServiceBooking(Base):
         nullable=False,
     )
 
+    is_rescheduled: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
     payment_due_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,

@@ -151,6 +151,7 @@ class Order(Base):
         booking_date = kwargs.pop("booking_date", None)
         booking_time = kwargs.pop("booking_time", None)
         is_on_call = kwargs.pop("is_on_call", False)
+        is_rescheduled = kwargs.pop("is_rescheduled", False)
         payment_due_at = kwargs.pop("payment_due_at", None)
         product_id = kwargs.pop("product_id", None)
 
@@ -164,6 +165,7 @@ class Order(Base):
                     booking_date=booking_date,
                     booking_time=booking_time,
                     is_on_call=is_on_call,
+                    is_rescheduled=is_rescheduled,
                     payment_due_at=payment_due_at,
                 )
         if product_id:
@@ -211,6 +213,17 @@ class Order(Base):
     @property
     def service(self):
         return self.service_booking.service if self.service_booking else None
+
+    @property
+    def is_rescheduled(self) -> bool:
+        return self.service_booking.is_rescheduled if self.service_booking else False
+
+    @is_rescheduled.setter
+    def is_rescheduled(self, val: bool):
+        if not self.service_booking:
+            self.service_booking = ServiceBooking(is_rescheduled=val)
+        else:
+            self.service_booking.is_rescheduled = val
 
     @property
     def product_id(self) -> int | None:
