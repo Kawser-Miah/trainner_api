@@ -626,3 +626,155 @@ def test_user_booking_reschedule_validation_and_errors(client, db_session, setup
     )
     assert res.status_code == 409
     assert res.json()["error"] == "SLOT_ALREADY_BOOKED"
+
+
+def test_user_booking_cancel_success(client, db_session, setup_booking_data):
+    setup = setup_booking_data
+    client_user = setup["client"]
+    coach = setup["coach"]
+    profile = setup["profile"]
+    service = setup["service"]
+
+    _cleanup_orders(db_session, [client_user.id])
+
+    future_date = _get_future_weekday(12)
+
+    # Create a paid confirmed booking with stripe payment
+    order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="11:00:00",
+        order_type="service",
+        amount="150.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+        payment_method="stripe",
+        transaction_id="cs_test_mock_checkout_123",
+    )
+    db_session.add(order)
+    db_session.commit()
+
+    # Call cancel endpoint (POST no body)
+    res = client.post(
+        f"/api/user/user-booking-cancel/{order.id}",
+        headers=setup["headers"],
+    )
+    assert res.status_code == 200
+    res_json = res.json()
+    assert res_json["success"] is True
+    assert res_json["status"] == 200
+    assert res_json["message"] == "Booking successfully cancelled and amount refunded to your account."
+
+    data = res_json["data"]
+    assert data["id"] == order.id
+    assert data["status"] == "cancelled"
+    assert data["payment_status"] == "refunded"
+    assert data["can_join"] is False
+    assert data["can_cancel"] is False
+    assert data["can_reschedule"] is False
+
+    # Check database state
+    db_session.refresh(order)
+    assert order.status == "cancelled"
+    assert order.payment_status == "refunded"
+
+    # Verify that the cancelled booking shows up under ?status=cancelled
+    list_res = client.get("/api/user/user-booking-list?status=cancelled", headers=setup["headers"])
+    assert list_res.status_code == 200
+    cancelled_list = list_res.json()["data"]
+    assert any(b["id"] == order.id and b["payment_status"] == "refunded" for b in cancelled_list)
+
+    # Verify that it is NOT in upcoming bookings
+    upcoming_res = client.get("/api/user/user-booking-list?status=upcoming", headers=setup["headers"])
+    assert upcoming_res.status_code == 200
+    upcoming_list = upcoming_res.json()["data"]
+    assert not any(b["id"] == order.id for b in upcoming_list)
+
+    # Attempting to cancel again fails
+    res_again = client.post(
+        f"/api/user/user-booking-cancel/{order.id}",
+        headers=setup["headers"],
+    )
+    assert res_again.status_code == 400
+    assert res_again.json()["error"] == "ALREADY_CANCELLED"
+
+
+def test_user_booking_cancel_validation_and_errors(client, db_session, setup_booking_data):
+    setup = setup_booking_data
+    client_user = setup["client"]
+    other_user = setup["other_user"]
+    coach = setup["coach"]
+    profile = setup["profile"]
+    service = setup["service"]
+
+    _cleanup_orders(db_session, [client_user.id, other_user.id])
+
+    future_date = _get_future_weekday(14)
+
+    # 1. Other user's paid order
+    other_order = Order(
+        user_id=other_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="10:00:00",
+        order_type="service",
+        amount="100.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+    )
+    db_session.add(other_order)
+
+    # 2. Client's unpaid order
+    unpaid_order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="11:00:00",
+        order_type="service",
+        amount="100.00",
+        currency="USD",
+        status="pending",
+        payment_status="pending",
+    )
+    db_session.add(unpaid_order)
+
+    # 3. Client's past confirmed paid order
+    past_order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date="2020-01-01",
+        booking_time="10:00:00",
+        order_type="service",
+        amount="100.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+    )
+    db_session.add(past_order)
+    db_session.commit()
+
+    # Cancel other user's order -> 404
+    res = client.post(f"/api/user/user-booking-cancel/{other_order.id}", headers=setup["headers"])
+    assert res.status_code == 404
+    assert res.json()["error"] == "BOOKING_NOT_FOUND"
+
+    # Cancel unpaid order -> 400 (BOOKING_NOT_PAID)
+    res_unpaid = client.post(f"/api/user/user-booking-cancel/{unpaid_order.id}", headers=setup["headers"])
+    assert res_unpaid.status_code == 400
+    assert res_unpaid.json()["error"] == "BOOKING_NOT_PAID"
+
+    # Cancel past session -> 400 (SESSION_ALREADY_PASSED)
+    res_past = client.post(f"/api/user/user-booking-cancel/{past_order.id}", headers=setup["headers"])
+    assert res_past.status_code == 400
+    assert res_past.json()["error"] == "SESSION_ALREADY_PASSED"
