@@ -19,7 +19,7 @@ from src.service.client.booking_and_payments.availability_validator import (
     validate_coach_working_hours,
     validate_not_in_past,
 )
-from src.service.client.booking_and_payments.user_booking_list_service import (
+from src.service.client.mybooking.helpers import (
     CONFIRMED_STATUSES,
     _booking_start,
     _build_booking_item,
@@ -143,3 +143,4 @@ async def reschedule_user_booking_service(
         coach_profile_ids=[order.coach_profile_id],
     )
     return _build_booking_item(order, reviewed, datetime.now(), request)
+
