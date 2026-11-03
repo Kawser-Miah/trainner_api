@@ -12,6 +12,9 @@ from src.api.routes.client.browse.coach_availability_month import (
 )
 from src.api.routes.client.browse.coach_availability import router as coach_availability_router
 from src.api.routes.client.browse.coach_reviews import router as coach_reviews_router
+from src.api.routes.client.browse.coach_profile_review import (
+    router as coach_profile_review_router,
+)
 from src.api.routes.client.browse.user_service_list import router as user_service_list_router
 from src.api.routes.client.browse.user_service_detail import router as user_service_detail_router
 from src.api.routes.client.browse.digital_product_list import (
@@ -42,6 +45,7 @@ __all__ = [
     "coach_availability_month_router",
     "coach_availability_router",
     "coach_reviews_router",
+    "coach_profile_review_router",
     "user_service_list_router",
     "user_service_detail_router",
     "digital_product_list_router",

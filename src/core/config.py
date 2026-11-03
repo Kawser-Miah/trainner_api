@@ -84,6 +84,7 @@ class Settings(BaseSettings):
     client_coaches_prefix: str = "/coaches"
     client_availability_prefix: str = "/availability"
     client_reviews_prefix: str = "/reviews"
+    coach_profile_review_prefix: str = "/coach-profile-review"
     user_service_list_prefix: str = "/user-service-list"
     user_service_detail_prefix: str = "/user-service-detail"
     digital_product_list_prefix: str = "/digital-product-list"

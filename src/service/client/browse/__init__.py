@@ -10,6 +10,9 @@ from src.service.client.browse.coach_availability_service import (
 from src.service.client.browse.coach_profile_detail_service import (
     get_coach_profile_detail_service,
 )
+from src.service.client.browse.coach_profile_review_service import (
+    submit_coach_profile_review_service,
+)
 from src.service.client.browse.coach_profile_list_service import (
     get_coach_profile_list_service,
 )
@@ -54,6 +57,7 @@ __all__ = [
     "get_coach_profile_list_service",
     "get_recommended_coach_profile_list_service",
     "get_coach_profile_detail_service",
+    "submit_coach_profile_review_service",
     "get_coach_availability_date_service",
     "get_coach_availability_month_service",
     "get_coach_availability_service",

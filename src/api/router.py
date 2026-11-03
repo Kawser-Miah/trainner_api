@@ -41,6 +41,7 @@ from src.api.routes.client.browse import (
     user_blog_list_router,
     user_blog_detail_router,
     app_rating_router,
+    coach_profile_review_router,
 )
 from src.api.routes.client.booking_and_payments import (
     book_service_router,
@@ -102,6 +103,7 @@ api_router.include_router(digital_product_download_router, prefix=settings.clien
 api_router.include_router(user_blog_list_router, prefix=settings.client_prefix)
 api_router.include_router(user_blog_detail_router, prefix=settings.client_prefix)
 api_router.include_router(app_rating_router, prefix=settings.client_prefix)
+api_router.include_router(coach_profile_review_router, prefix=settings.client_prefix)
 
 # Client bookings endpoints (/user)
 api_router.include_router(user_booking_list_router, prefix=settings.client_prefix)
