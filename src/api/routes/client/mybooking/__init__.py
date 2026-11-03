@@ -2,6 +2,9 @@
 
 from fastapi import APIRouter
 
+from src.api.routes.client.mybooking.user_booking_cancel import (
+    router as user_booking_cancel_router,
+)
 from src.api.routes.client.mybooking.user_booking_detail import (
     router as user_booking_detail_router,
 )
@@ -16,11 +19,13 @@ my_booking_router = APIRouter()
 my_booking_router.include_router(user_booking_list_router)
 my_booking_router.include_router(user_booking_detail_router)
 my_booking_router.include_router(user_booking_reschedule_router)
+my_booking_router.include_router(user_booking_cancel_router)
 
 __all__ = [
     "user_booking_list_router",
     "user_booking_detail_router",
     "user_booking_reschedule_router",
+    "user_booking_cancel_router",
     "my_booking_router",
 ]
 

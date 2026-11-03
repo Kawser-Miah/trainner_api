@@ -48,6 +48,7 @@ from src.api.routes.client.booking_and_payments import (
     stripe_checkout_router,
 )
 from src.api.routes.client.mybooking import (
+    user_booking_cancel_router,
     user_booking_detail_router,
     user_booking_list_router,
     user_booking_reschedule_router,
@@ -106,6 +107,7 @@ api_router.include_router(app_rating_router, prefix=settings.client_prefix)
 api_router.include_router(user_booking_list_router, prefix=settings.client_prefix)
 api_router.include_router(user_booking_detail_router, prefix=settings.client_prefix)
 api_router.include_router(user_booking_reschedule_router, prefix=settings.client_prefix)
+api_router.include_router(user_booking_cancel_router, prefix=settings.client_prefix)
 
 # Client Booking & Payments endpoints (/payments)
 api_router.include_router(book_service_router, prefix=settings.payments_prefix)

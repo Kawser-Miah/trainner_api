@@ -9,6 +9,9 @@ from src.service.client.mybooking.helpers import (
     _matches,
     parse_status_filter,
 )
+from src.service.client.mybooking.user_booking_cancel_service import (
+    cancel_user_booking_service,
+)
 from src.service.client.mybooking.user_booking_detail_service import (
     get_user_booking_detail_service,
 )
@@ -30,5 +33,6 @@ __all__ = [
     "get_user_booking_list_service",
     "get_user_booking_detail_service",
     "reschedule_user_booking_service",
+    "cancel_user_booking_service",
 ]
 
