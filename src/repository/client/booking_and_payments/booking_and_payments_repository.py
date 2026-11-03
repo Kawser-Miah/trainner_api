@@ -100,7 +100,7 @@ def get_user_service_orders(
     db: Session,
     user_id: int,
     statuses: list[str] | None = None,
-    payment_status: str | None = "paid",
+    payment_status: str | list[str] | None = "paid",
 ) -> list[Order]:
     query = (
         db.query(Order)
@@ -116,7 +116,10 @@ def get_user_service_orders(
         )
     )
     if payment_status is not None:
-        query = query.filter(Order.payment_status == payment_status)
+        if isinstance(payment_status, list):
+            query = query.filter(Order.payment_status.in_(payment_status))
+        else:
+            query = query.filter(Order.payment_status == payment_status)
     if statuses:
         query = query.filter(Order.status.in_(statuses))
     return query.order_by(Order.id.desc()).all()
@@ -144,7 +147,7 @@ def get_user_service_order_by_id(
     db: Session,
     user_id: int,
     order_id: int,
-    payment_status: str | None = "paid",
+    payment_status: str | list[str] | None = "paid",
 ) -> Order | None:
     query = (
         db.query(Order)
@@ -161,5 +164,8 @@ def get_user_service_order_by_id(
         )
     )
     if payment_status is not None:
-        query = query.filter(Order.payment_status == payment_status)
+        if isinstance(payment_status, list):
+            query = query.filter(Order.payment_status.in_(payment_status))
+        else:
+            query = query.filter(Order.payment_status == payment_status)
     return query.first()

@@ -37,7 +37,7 @@ async def get_user_booking_list_service(
         db=db,
         user_id=current_user.id,
         statuses=db_statuses,
-        payment_status="paid",
+        payment_status=["paid", "refunded"],
     )
     now = datetime.now()
     orders = [order for order in orders if _matches(order, filters)]

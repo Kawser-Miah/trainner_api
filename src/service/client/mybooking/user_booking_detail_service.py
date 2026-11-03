@@ -22,7 +22,7 @@ async def get_user_booking_detail_service(
         db=db,
         user_id=current_user.id,
         order_id=booking_id,
-        payment_status="paid",
+        payment_status=["paid", "refunded"],
     )
     if not order:
         raise AppException(

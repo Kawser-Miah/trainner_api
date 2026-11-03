@@ -96,6 +96,7 @@ class Settings(BaseSettings):
     user_booking_list_prefix: str = "/user-booking-list"
     user_booking_detail_prefix: str = "/user-booking-detail"
     user_booking_reschedule_prefix: str = "/user-booking-reschedule"
+    user_booking_cancel_prefix: str = "/user-booking-cancel"
     payments_prefix: str = "/payments"
     book_service_prefix: str = "/book-service"
     product_purchase_prefix: str = "/products/purchase"

@@ -42,7 +42,7 @@ def _format_time(order: ServiceOrder) -> str | None:
 
 
 def _matches(order: ServiceOrder, filters: set[str]) -> bool:
-    if order.payment_status != "paid":
+    if order.payment_status not in {"paid", "refunded"}:
         return False
     if not filters:
         return True
@@ -64,7 +64,7 @@ def _build_booking_item(
     coach_profile = order.coach_profile
     start = _booking_start(order)
     is_rescheduled = bool(getattr(order, "is_rescheduled", False))
-    is_active = order.status in CONFIRMED_STATUSES and (start is None or start >= now)
+    is_active = order.status in CONFIRMED_STATUSES and order.payment_status == "paid" and (start is None or start >= now)
     return UserBookingItem(
         id=order.id,
         provider_user_id=order.coach_id,
