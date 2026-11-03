@@ -16,6 +16,10 @@ from src.schemas.client.browse.service_schemas import (
     ClientServiceItemResponse,
     ClientServiceDetailResponse,
 )
+from src.schemas.client.browse.coach_profile_review_schemas import (
+    CoachProfileReviewCreateRequest,
+    CoachProfileReviewData,
+)
 from src.schemas.client.browse.digital_product_schemas import (
     DigitalProductItemResponse,
     DigitalProductDetailResponse,
@@ -50,5 +54,7 @@ __all__ = [
     "AppRatingStatsResponse",
     "AppRatingItemResponse",
     "AppRatingListItemResponse",
+    "CoachProfileReviewCreateRequest",
+    "CoachProfileReviewData",
 ]
 
