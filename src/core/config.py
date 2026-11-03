@@ -95,6 +95,7 @@ class Settings(BaseSettings):
     app_ratings_list_prefix: str = "/app-ratings-list"
     user_booking_list_prefix: str = "/user-booking-list"
     user_booking_detail_prefix: str = "/user-booking-detail"
+    user_booking_reschedule_prefix: str = "/user-booking-reschedule"
     payments_prefix: str = "/payments"
     book_service_prefix: str = "/book-service"
     product_purchase_prefix: str = "/products/purchase"

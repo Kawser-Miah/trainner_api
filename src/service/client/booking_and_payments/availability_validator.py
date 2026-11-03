@@ -21,8 +21,8 @@ def parse_time_to_minutes(time_str: str) -> int:
             error="INVALID_TIME_FORMAT",
         )
 
-    # 1. Check for 12-hour AM/PM format (e.g., '02:00 PM', '2:00 PM', '11:30 AM')
-    match_12 = re.match(r"^(\d{1,2}):(\d{2})\s*(AM|PM)$", cleaned)
+    # 1. Check for 12-hour AM/PM format (e.g., '02:00 PM', '2:00 PM', '02:00:00 PM', '11:30 AM')
+    match_12 = re.match(r"^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$", cleaned)
     if match_12:
         hour, minute, am_pm = match_12.groups()
         h, m = int(hour), int(minute)
@@ -38,8 +38,8 @@ def parse_time_to_minutes(time_str: str) -> int:
             h = 12 if h == 12 else h + 12
         return h * 60 + m
 
-    # 2. Check for 24-hour format (e.g., '14:00', '09:30')
-    match_24 = re.match(r"^(\d{1,2}):(\d{2})$", cleaned)
+    # 2. Check for 24-hour format (e.g., '14:00', '14:00:00', '09:30')
+    match_24 = re.match(r"^(\d{1,2}):(\d{2})(?::\d{2})?$", cleaned)
     if match_24:
         hour, minute = match_24.groups()
         h, m = int(hour), int(minute)

@@ -71,6 +71,7 @@ def _build_booking_item(
     coach = order.coach
     coach_profile = order.coach_profile
     start = _booking_start(order)
+    is_rescheduled = bool(getattr(order, "is_rescheduled", False))
     is_active = order.status in CONFIRMED_STATUSES and (start is None or start >= now)
     return UserBookingItem(
         id=order.id,
@@ -97,14 +98,12 @@ def _build_booking_item(
         status=order.status,
         payment_status=order.payment_status,
         payment_method=order.payment_method,
-        # notes / coach_message / reschedules are not stored on service_orders
-        # (columns were dropped in c35ae272d2f9), so defaults are returned.
-        is_rescheduled=False,
+        is_rescheduled=is_rescheduled,
         notes=None,
         coach_message="",
         has_reviewed=order.coach_profile_id in reviewed,
         can_cancel=is_active,
-        can_reschedule=is_active,
+        can_reschedule=is_active and not is_rescheduled,
     )
 
 

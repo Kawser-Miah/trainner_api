@@ -440,3 +440,189 @@ def test_user_booking_detail(client, db_session, setup_booking_data):
     res_none = client.get("/api/user/user-booking-detail/999999", headers=setup["headers"])
     assert res_none.status_code == 404
     assert res_none.json()["error"] == "BOOKING_NOT_FOUND"
+
+
+def _get_future_weekday(days_ahead=14) -> str:
+    target = datetime.now() + timedelta(days=days_ahead)
+    while target.weekday() > 4:  # Monday - Friday
+        target += timedelta(days=1)
+    return target.strftime("%Y-%m-%d")
+
+
+def test_user_booking_reschedule_success(client, db_session, setup_booking_data):
+    setup = setup_booking_data
+    client_user = setup["client"]
+    coach = setup["coach"]
+    profile = setup["profile"]
+    service = setup["service"]
+
+    _cleanup_orders(db_session, [client_user.id])
+
+    original_date = _get_future_weekday(10)
+    new_date = _get_future_weekday(17)
+
+    # Create a confirmed paid booking
+    order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=original_date,
+        booking_time="10:00:00",
+        order_type="service",
+        amount="100.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+    )
+    db_session.add(order)
+    db_session.commit()
+
+    # 1. Reschedule to 03:00 PM on new_date
+    res = client.post(
+        f"/api/user/user-booking-reschedule/{order.id}",
+        json={
+            "booking_date": new_date,
+            "booking_time": "03:00 PM",
+        },
+        headers=setup["headers"],
+    )
+    assert res.status_code == 200
+    res_json = res.json()
+    assert res_json["success"] is True
+    assert res_json["status"] == 200
+    assert res_json["message"] == "Booking rescheduled successfully."
+
+    data = res_json["data"]
+    assert data["id"] == order.id
+    assert data["booking_date"] == new_date
+    assert data["booking_time"] == "15:00:00"
+    assert data["is_rescheduled"] is True
+    assert data["can_reschedule"] is False
+    assert data["can_join"] is True
+    assert data["can_cancel"] is True
+    assert data["status"] == "confirmed"
+    assert data["payment_status"] == "paid"
+
+    # Verify database state
+    db_session.refresh(order)
+    assert order.service_booking.booking_date == new_date
+    assert order.service_booking.booking_time == "15:00:00"
+    assert order.service_booking.is_rescheduled is True
+
+    # 2. Attempting to reschedule again should fail
+    res_again = client.post(
+        f"/api/user/user-booking-reschedule/{order.id}",
+        json={
+            "booking_date": _get_future_weekday(20),
+            "booking_time": "11:00 AM",
+        },
+        headers=setup["headers"],
+    )
+    assert res_again.status_code == 400
+    assert res_again.json()["error"] == "ALREADY_RESCHEDULED"
+
+
+def test_user_booking_reschedule_validation_and_errors(client, db_session, setup_booking_data):
+    setup = setup_booking_data
+    client_user = setup["client"]
+    other_user = setup["other_user"]
+    coach = setup["coach"]
+    profile = setup["profile"]
+    service = setup["service"]
+
+    _cleanup_orders(db_session, [client_user.id, other_user.id])
+
+    future_date = _get_future_weekday(10)
+
+    # 1. Other user's order
+    other_order = Order(
+        user_id=other_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="10:00:00",
+        order_type="service",
+        amount="100.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+    )
+    db_session.add(other_order)
+
+    # 2. Client's unpaid order
+    unpaid_order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="11:00:00",
+        order_type="service",
+        amount="100.00",
+        currency="USD",
+        status="pending",
+        payment_status="pending",
+    )
+    db_session.add(unpaid_order)
+
+    # 3. Client's confirmed paid order
+    confirmed_order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="14:00:00",
+        order_type="service",
+        amount="100.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+    )
+    db_session.add(confirmed_order)
+    db_session.commit()
+
+    # Reschedule other user's order -> 404
+    res = client.post(
+        f"/api/user/user-booking-reschedule/{other_order.id}",
+        json={"booking_date": _get_future_weekday(15), "booking_time": "10:00 AM"},
+        headers=setup["headers"],
+    )
+    assert res.status_code == 404
+
+    # Reschedule unpaid order -> 404 (not a booking)
+    res = client.post(
+        f"/api/user/user-booking-reschedule/{unpaid_order.id}",
+        json={"booking_date": _get_future_weekday(15), "booking_time": "10:00 AM"},
+        headers=setup["headers"],
+    )
+    assert res.status_code == 404
+
+    # Reschedule into past date -> 400
+    res = client.post(
+        f"/api/user/user-booking-reschedule/{confirmed_order.id}",
+        json={"booking_date": "2020-01-01", "booking_time": "10:00 AM"},
+        headers=setup["headers"],
+    )
+    assert res.status_code == 400
+    assert res.json()["error"] == "PAST_BOOKING_TIME"
+
+    # Reschedule outside coach hours (e.g. 11:00 PM) -> 400
+    res = client.post(
+        f"/api/user/user-booking-reschedule/{confirmed_order.id}",
+        json={"booking_date": _get_future_weekday(15), "booking_time": "11:00 PM"},
+        headers=setup["headers"],
+    )
+    assert res.status_code == 400
+    assert res.json()["error"] == "OUTSIDE_WORKING_HOURS"
+
+    # Reschedule into overlapping slot (other_order has 10:00:00 on future_date) -> 409
+    res = client.post(
+        f"/api/user/user-booking-reschedule/{confirmed_order.id}",
+        json={"booking_date": future_date, "booking_time": "10:00 AM"},
+        headers=setup["headers"],
+    )
+    assert res.status_code == 409
+    assert res.json()["error"] == "SLOT_ALREADY_BOOKED"

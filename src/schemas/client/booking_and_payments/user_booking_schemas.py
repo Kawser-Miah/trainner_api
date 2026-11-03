@@ -1,4 +1,9 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class RescheduleBookingRequest(BaseModel):
+    booking_date: str = Field(..., description="New booking date (e.g. YYYY-MM-DD)")
+    booking_time: str = Field(..., description="New booking time (e.g. 03:00 PM or 15:00)")
 
 
 class UserBookingItem(BaseModel):
