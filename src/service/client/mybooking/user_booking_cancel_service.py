@@ -6,9 +6,10 @@ import stripe
 from src.core.config import settings
 from src.core.exceptions import AppException
 from src.models.accounts.user import User
-from src.repository.client.booking_and_payments.booking_and_payments_repository import (
+from src.repository.client.mybooking import (
     get_reviewed_coach_profile_ids,
     get_user_service_order_by_id,
+    mark_order_cancelled_and_refunded,
 )
 from src.schemas.client.booking_and_payments.user_booking_schemas import UserBookingItem
 from src.service.client.mybooking.helpers import (
@@ -94,11 +95,7 @@ async def cancel_user_booking_service(
                 pass
 
     # 7. Update status to cancelled and payment_status to refunded
-    order.status = "cancelled"
-    order.payment_status = "refunded"
-    db.add(order)
-    db.commit()
-    db.refresh(order)
+    order = mark_order_cancelled_and_refunded(db=db, order=order)
 
     # 8. Return updated booking item
     reviewed = get_reviewed_coach_profile_ids(
@@ -107,3 +104,4 @@ async def cancel_user_booking_service(
         coach_profile_ids=[order.coach_profile_id],
     )
     return _build_booking_item(order, reviewed, datetime.now(), request)
+
