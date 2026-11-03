@@ -1,0 +1,2 @@
+"""Client Favorites repository package."""
+

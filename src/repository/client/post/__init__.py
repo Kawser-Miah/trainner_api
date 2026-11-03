@@ -1,0 +1,2 @@
+"""Client Posts repository package."""
+

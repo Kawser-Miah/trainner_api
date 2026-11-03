@@ -1,0 +1,2 @@
+"""Client Posts schemas package."""
+

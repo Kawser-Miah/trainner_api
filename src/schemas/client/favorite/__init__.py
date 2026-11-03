@@ -1,0 +1,2 @@
+"""Client Favorites schemas package."""
+
