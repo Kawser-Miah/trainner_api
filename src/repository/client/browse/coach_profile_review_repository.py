@@ -33,6 +33,42 @@ def get_coach_review_by_user_and_coach(
     )
 
 
+def create_coach_profile_review(
+    db: Session,
+    coach_profile: CoachProfile,
+    user_id: int,
+    rating: int,
+    review: str,
+) -> CoachReview:
+    now = datetime.now(timezone.utc)
+    review_obj = CoachReview(
+        coach_profile_id=coach_profile.id,
+        user_id=user_id,
+        rating=rating,
+        review=review,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(review_obj)
+    db.flush()
+
+    # Recalculate coach_profile stats
+    stats = (
+        db.query(
+            func.count(CoachReview.id).label("total"),
+            func.avg(CoachReview.rating).label("avg"),
+        )
+        .filter(CoachReview.coach_profile_id == coach_profile.id)
+        .one()
+    )
+    coach_profile.total_reviews = int(stats.total or 0)
+    coach_profile.avg_rating = round(float(stats.avg or 0.0), 1)
+
+    db.commit()
+    db.refresh(review_obj)
+    return review_obj
+
+
 def upsert_coach_profile_review(
     db: Session,
     coach_profile: CoachProfile,
@@ -79,3 +115,4 @@ def upsert_coach_profile_review(
     db.commit()
     db.refresh(review_obj)
     return review_obj
+
