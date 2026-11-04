@@ -124,6 +124,11 @@ app.include_router(
 )
 app.include_router(
     router.api_router,
+    prefix="/api/v1",
+    include_in_schema=False,
+)
+app.include_router(
+    router.api_router,
     include_in_schema=False,
 )
 
