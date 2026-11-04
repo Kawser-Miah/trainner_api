@@ -778,3 +778,150 @@ def test_user_booking_cancel_validation_and_errors(client, db_session, setup_boo
     res_past = client.post(f"/api/user/user-booking-cancel/{past_order.id}", headers=setup["headers"])
     assert res_past.status_code == 400
     assert res_past.json()["error"] == "SESSION_ALREADY_PASSED"
+
+
+def test_user_booking_cancel_stripe_refund_error_prevents_cancellation(client, db_session, setup_booking_data, monkeypatch):
+    import stripe
+    setup = setup_booking_data
+    client_user = setup["client"]
+    coach = setup["coach"]
+    profile = setup["profile"]
+    service = setup["service"]
+
+    future_date = _get_future_weekday(14)
+    order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="10:00:00",
+        order_type="service",
+        amount="150.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+        transaction_id="pi_real_test_charge_123",
+    )
+    db_session.add(order)
+    db_session.commit()
+
+    # Mock stripe.Refund.create to raise an error
+    def mock_refund_create(**kwargs):
+        raise stripe.error.CardError("Card could not be refunded", "charge", "card_error")
+
+    monkeypatch.setattr("stripe.Refund.create", mock_refund_create)
+
+    res = client.post(
+        f"/api/user/user-booking-cancel/{order.id}",
+        headers=setup["headers"],
+    )
+    assert res.status_code == 400
+    assert res.json()["error"] == "STRIPE_REFUND_ERROR"
+
+    # Verify DB state has NOT been marked as cancelled or refunded!
+    db_session.expire_all()
+    refreshed_order = db_session.query(Order).filter(Order.id == order.id).first()
+    assert refreshed_order.status == "confirmed"
+    assert refreshed_order.payment_status == "paid"
+
+
+def test_user_booking_cancel_stripe_refund_confirmed_via_status(client, db_session, setup_booking_data, monkeypatch):
+    import stripe
+    setup = setup_booking_data
+    client_user = setup["client"]
+    coach = setup["coach"]
+    profile = setup["profile"]
+    service = setup["service"]
+
+    future_date = _get_future_weekday(14)
+    order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="10:00:00",
+        order_type="service",
+        amount="150.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+        transaction_id="pi_real_test_charge_456",
+    )
+    db_session.add(order)
+    db_session.commit()
+
+    class MockRefund:
+        id = "re_test_success_789"
+        status = "succeeded"
+
+    monkeypatch.setattr("stripe.Refund.create", lambda **kwargs: MockRefund())
+
+    res = client.post(
+        f"/api/user/user-booking-cancel/{order.id}",
+        headers=setup["headers"],
+    )
+    assert res.status_code == 200
+    assert res.json()["success"] is True
+
+    db_session.expire_all()
+    refreshed_order = db_session.query(Order).filter(Order.id == order.id).first()
+    assert refreshed_order.status == "cancelled"
+    assert refreshed_order.payment_status == "refunded"
+    assert refreshed_order.refunded_at is not None
+
+
+def test_stripe_webhook_charge_refunded(client, db_session, setup_booking_data, monkeypatch):
+    monkeypatch.setattr("src.service.client.booking_and_payments.stripe_webhook_service.settings.stripe_webhook_secret", "")
+    setup = setup_booking_data
+    client_user = setup["client"]
+    coach = setup["coach"]
+    profile = setup["profile"]
+    service = setup["service"]
+
+    future_date = _get_future_weekday(14)
+    order = Order(
+        user_id=client_user.id,
+        coach_id=coach.id,
+        coach_profile_id=profile.id,
+        service_id=service.id,
+        booking_date=future_date,
+        booking_time="10:00:00",
+        order_type="service",
+        amount="150.00",
+        currency="USD",
+        status="confirmed",
+        payment_status="paid",
+        transaction_id="pi_webhook_refund_test_999",
+    )
+    db_session.add(order)
+    db_session.commit()
+
+    webhook_payload = {
+        "id": "evt_test_refund_123",
+        "type": "charge.refunded",
+        "data": {
+            "object": {
+                "id": "ch_test_charge_999",
+                "payment_intent": "pi_webhook_refund_test_999",
+                "refunded": True,
+                "metadata": {
+                    "booking_id": str(order.id),
+                },
+            }
+        },
+    }
+
+    res_wh = client.post("/payments/stripe/webhook", json=webhook_payload)
+    assert res_wh.status_code == 200
+    wh_data = res_wh.json()
+    assert wh_data["received"] is True
+    assert wh_data["status"] == "cancelled"
+    assert wh_data["payment_status"] == "refunded"
+
+    db_session.expire_all()
+    refreshed_order = db_session.query(Order).filter(Order.id == order.id).first()
+    assert refreshed_order.status == "cancelled"
+    assert refreshed_order.payment_status == "refunded"
+    assert refreshed_order.refunded_at is not None
