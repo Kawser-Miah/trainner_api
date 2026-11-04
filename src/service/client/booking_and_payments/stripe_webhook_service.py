@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 import stripe
 from sqlalchemy.orm import Session
 
@@ -121,6 +122,8 @@ async def handle_stripe_webhook_service(
             order.payment_status = "paid"
             order.status = "confirmed"
             order.payment_method = "stripe"
+            if not order.paid_at:
+                order.paid_at = datetime.now(timezone.utc)
             if trx_id:
                 order.transaction_id = trx_id
             if order.order_type == "product" and order.product_id:
