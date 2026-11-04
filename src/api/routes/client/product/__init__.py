@@ -2,10 +2,12 @@
 
 from src.api.routes.client.myproduct import (
     my_product_router,
+    user_product_detail_router,
     user_product_list_router,
 )
 
 __all__ = [
     "user_product_list_router",
+    "user_product_detail_router",
     "my_product_router",
 ]
