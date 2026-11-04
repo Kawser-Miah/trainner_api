@@ -92,11 +92,11 @@ async def purchase_product_service(
     except (ValueError, TypeError):
         price = 0.0
 
-    client_fee_pct = 0.00
+    client_fee_pct = float(settings.client_fee_percentage)
     coach_fee_pct = float(settings.coach_fee_percentage)
 
-    client_fee_val = 0.00
-    total_amount_val = price
+    client_fee_val = round(price * (client_fee_pct / 100.0), 2)
+    total_amount_val = round(price + client_fee_val, 2)
 
     coach_fee_val = round(price * (coach_fee_pct / 100.0), 2)
     coach_earning_val = round(price - coach_fee_val, 2)
