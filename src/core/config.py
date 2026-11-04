@@ -101,6 +101,7 @@ class Settings(BaseSettings):
     user_product_list_prefix: str = "/user-product-list"
     user_product_detail_prefix: str = "/user-product-detail"
     user_billing_history_prefix: str = "/billing-history"
+    user_favorites_prefix: str = "/favorites"
     payments_prefix: str = "/payments"
     book_service_prefix: str = "/book-service"
     product_purchase_prefix: str = "/products/purchase"

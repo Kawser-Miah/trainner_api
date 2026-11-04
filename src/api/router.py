@@ -62,6 +62,7 @@ from src.api.routes.client.billing import (
     user_billing_history_router,
     user_billing_receipt_router,
 )
+from src.api.routes.client.favorite import user_favorite_router
 
 
 api_router = APIRouter()
@@ -126,6 +127,9 @@ api_router.include_router(user_product_detail_router, prefix=settings.client_pre
 # Client billing endpoints (/user)
 api_router.include_router(user_billing_history_router, prefix=settings.client_prefix)
 api_router.include_router(user_billing_receipt_router, prefix=settings.client_prefix)
+
+# Client favorites endpoints (/user)
+api_router.include_router(user_favorite_router, prefix=settings.client_prefix)
 
 # Client Booking & Payments endpoints (/payments)
 api_router.include_router(book_service_router, prefix=settings.payments_prefix)
