@@ -30,23 +30,26 @@ def get_user_paid_product_orders(
     )
 
 
-def get_user_standalone_product_purchases(
+def get_user_paid_product_order_by_id(
     db: Session,
     user_id: int,
-) -> list[ProductPurchase]:
-    """Retrieve any legacy/standalone product purchases not tied to an order."""
+    order_id: int,
+) -> Order | None:
+    """Retrieve a single paid product order by ID for the client."""
     return (
-        db.query(ProductPurchase)
+        db.query(Order)
         .options(
-            joinedload(ProductPurchase.product).joinedload(CoachProduct.category),
-            joinedload(ProductPurchase.product)
-            .joinedload(CoachProduct.coach_profile)
-            .joinedload(CoachProfile.user),
+            joinedload(Order.coach),
+            joinedload(Order.coach_profile).joinedload(CoachProfile.user),
+            joinedload(Order.product_purchase)
+            .joinedload(ProductPurchase.product)
+            .joinedload(CoachProduct.category),
         )
         .filter(
-            ProductPurchase.user_id == user_id,
-            ProductPurchase.order_id.is_(None),
+            Order.id == order_id,
+            Order.user_id == user_id,
+            Order.order_type == "product",
+            Order.payment_status == "paid",
         )
-        .order_by(ProductPurchase.created_at.desc())
-        .all()
+        .first()
     )
