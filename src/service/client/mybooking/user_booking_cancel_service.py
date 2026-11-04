@@ -78,21 +78,41 @@ async def cancel_user_booking_service(
         stripe.api_key = settings.stripe_secret_key.strip()
         trx_id = order.transaction_id
         if trx_id and not trx_id.startswith("free_"):
-            try:
-                if trx_id.startswith("pi_"):
-                    stripe.Refund.create(payment_intent=trx_id)
-                elif trx_id.startswith("ch_"):
-                    stripe.Refund.create(charge=trx_id)
-                elif trx_id.startswith("cs_"):
-                    try:
+            is_mock = "mock" in trx_id.lower() or trx_id.startswith("mock_")
+            if not is_mock:
+                refund = None
+                try:
+                    if trx_id.startswith("pi_"):
+                        refund = stripe.Refund.create(payment_intent=trx_id)
+                    elif trx_id.startswith("ch_"):
+                        refund = stripe.Refund.create(charge=trx_id)
+                    elif trx_id.startswith("cs_"):
                         session = stripe.checkout.Session.retrieve(trx_id)
                         pi_id = getattr(session, "payment_intent", None)
+                        if isinstance(pi_id, dict):
+                            pi_id = pi_id.get("id")
                         if pi_id:
-                            stripe.Refund.create(payment_intent=pi_id)
-                    except Exception:
-                        pass
-            except stripe.error.StripeError:
-                pass
+                            refund = stripe.Refund.create(payment_intent=str(pi_id))
+                        else:
+                            raise AppException(
+                                message="Cannot process refund: No payment intent found for this session.",
+                                status=400,
+                                error="PAYMENT_INTENT_NOT_FOUND",
+                            )
+                except stripe.error.StripeError as e:
+                    raise AppException(
+                        message=f"Stripe refund failed: {e.user_message or str(e)}",
+                        status=400,
+                        error="STRIPE_REFUND_ERROR",
+                    )
+
+                refund_status = getattr(refund, "status", None) if refund else None
+                if refund_status not in ("succeeded", "pending"):
+                    raise AppException(
+                        message=f"Stripe refund could not be confirmed (status: {refund_status}).",
+                        status=400,
+                        error="STRIPE_REFUND_NOT_CONFIRMED",
+                    )
 
     # 7. Update status to cancelled and payment_status to refunded
     order = mark_order_cancelled_and_refunded(db=db, order=order)
