@@ -149,6 +149,9 @@ def test_purchase_product_creates_separated_order_and_purchase(client, db_sessio
     order_id = data["id"]
     assert data["order_type"] == "product"
     assert data["amount"] == "30.00"
+    assert data["client_fee"] == "0.90"
+    assert data["client_fee_percent"] == "3.00"
+    assert data["total_amount"] == "30.90"
     assert data["booking_date"] is None
     assert data["booking_time"] is None
     assert data["service"] is None
@@ -159,6 +162,9 @@ def test_purchase_product_creates_separated_order_and_purchase(client, db_sessio
     assert db_order is not None
     assert db_order.order_type == "product"
     assert db_order.amount == "30.00"
+    assert db_order.client_fee == "0.90"
+    assert db_order.client_fee_percent == "3.00"
+    assert db_order.total_amount == "30.90"
 
     # 2. Verify row exists in `product_purchases` with order_id
     db_purchase = db_session.query(ProductPurchase).filter(ProductPurchase.order_id == order_id).first()
