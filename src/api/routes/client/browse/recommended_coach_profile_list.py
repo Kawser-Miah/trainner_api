@@ -37,6 +37,7 @@ async def get_recommended_coach_profile_list(
     profiles = await get_recommended_coach_profile_list_service(
         db=db,
         request=request,
+        user_id=current_user.id if current_user else None,
     )
     return CommonResponse(
         success=True,

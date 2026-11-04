@@ -23,6 +23,7 @@ async def get_coach_profile_detail_service(
     coach_profile_id: int,
     db: Session,
     request: Request | None = None,
+    user_id: int | None = None,
 ) -> CoachProfileDetailResponse:
     profile = get_browse_coach_profile_detail(db=db, coach_profile_id=coach_profile_id)
     if not profile:
@@ -191,6 +192,11 @@ async def get_coach_profile_detail_service(
         percent=0.0,
     )
 
+    is_fav = False
+    if user_id:
+        from src.repository.client.favorite.favorite_repository import is_coach_favorited
+        is_fav = is_coach_favorited(db=db, user_id=user_id, coach_profile_id=coach_profile_id)
+
     return CoachProfileDetailResponse(
         id=profile.id,
         user=user_resp,
@@ -226,7 +232,7 @@ async def get_coach_profile_detail_service(
         missed_meetings=missed_obj,
         takes_on_call=takes_on_call,
         starting_price=starting_price,
-        is_favorited=False,
+        is_favorited=is_fav,
         reviews=reviews_list,
         rating_breakdown=rating_breakdown,
         created_at=format_iso_datetime(profile.created_at),

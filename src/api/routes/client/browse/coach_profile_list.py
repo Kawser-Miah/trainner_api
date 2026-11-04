@@ -41,6 +41,7 @@ async def get_coach_profile_list(
         category=category,
         ordering=ordering,
         request=request,
+        user_id=current_user.id if current_user else None,
     )
     return CommonResponse(
         success=True,

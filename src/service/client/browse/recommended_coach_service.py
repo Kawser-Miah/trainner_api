@@ -9,9 +9,20 @@ from src.service.client.browse.coach_profile_list_service import serialize_coach
 async def get_recommended_coach_profile_list_service(
     db: Session,
     request: Request | None = None,
+    user_id: int | None = None,
 ) -> list[CoachProfileListItemResponse]:
     profiles = get_browse_coach_profiles(
         db=db,
         recommended=True,
     )
-    return [serialize_coach_profile_list_item(p, request) for p in profiles]
+    from src.service.client.browse.coach_profile_list_service import get_user_favorite_coach_ids
+
+    fav_ids = get_user_favorite_coach_ids(db=db, user_id=user_id)
+    return [
+        serialize_coach_profile_list_item(
+            p,
+            request,
+            is_favorited=(p.id in fav_ids),
+        )
+        for p in profiles
+    ]

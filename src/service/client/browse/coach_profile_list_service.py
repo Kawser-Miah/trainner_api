@@ -1,6 +1,8 @@
 from fastapi import Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from src.models.client.coach_favorite import CoachFavorite
 from src.models.provider.coach_profile import CoachProfile
 from src.repository.client.browse.client_browse_repository import get_browse_coach_profiles
 from src.schemas.client.browse.coach_schemas import (
@@ -14,9 +16,19 @@ from src.service.client.browse.helpers import (
 from src.utils.media import build_media_url
 
 
+def get_user_favorite_coach_ids(db: Session, user_id: int | None) -> set[int]:
+    if not user_id:
+        return set()
+    res = db.execute(
+        select(CoachFavorite.coach_profile_id).where(CoachFavorite.user_id == user_id)
+    ).scalars().all()
+    return set(res)
+
+
 def serialize_coach_profile_list_item(
     profile: CoachProfile,
     request: Request | None = None,
+    is_favorited: bool = False,
 ) -> CoachProfileListItemResponse:
     user = profile.user
     user_image = build_media_url(user.photo_url, request) if user and user.photo_url else None
@@ -53,7 +65,9 @@ def serialize_coach_profile_list_item(
         review_count=int(profile.total_reviews or len(profile.reviews or [])),
         completed_sessions_count=int(profile.completed_sessions_count or 0),
         starting_price=starting_price,
-        is_favorited=False,
+        is_favorited=is_favorited,
+        affiliate_status=None,
+        affiliate_code=None,
         profile_photo=profile_photo,
         introduction_video=intro_video,
         introduction_video_duration=profile.introduction_video_duration,
@@ -61,6 +75,7 @@ def serialize_coach_profile_list_item(
         linkedin_url=profile.linkedin_url or "",
         affiliate_commission_percent=profile.affiliate_commission_percent or "20.00",
         on_call_enabled=on_call,
+        timezone=getattr(user, "timezone", "") or "" if user else "",
         auto_approve_affiliates=profile.auto_approve_affiliates,
         about=profile.about,
         headline=profile.headline or "",
@@ -80,6 +95,7 @@ async def get_coach_profile_list_service(
     category: str | None = None,
     ordering: str | None = None,
     request: Request | None = None,
+    user_id: int | None = None,
 ) -> list[CoachProfileListItemResponse]:
     profiles = get_browse_coach_profiles(
         db=db,
@@ -88,4 +104,12 @@ async def get_coach_profile_list_service(
         ordering=ordering,
         recommended=False,
     )
-    return [serialize_coach_profile_list_item(p, request) for p in profiles]
+    fav_ids = get_user_favorite_coach_ids(db=db, user_id=user_id)
+    return [
+        serialize_coach_profile_list_item(
+            p,
+            request,
+            is_favorited=(p.id in fav_ids),
+        )
+        for p in profiles
+    ]

@@ -37,6 +37,7 @@ async def get_coach_profile_detail(
         coach_profile_id=coach_profile_id,
         db=db,
         request=request,
+        user_id=current_user.id if current_user else None,
     )
     return CommonResponse(
         success=True,
