@@ -182,4 +182,52 @@ async def handle_stripe_webhook_service(
                     "payment_status": order.payment_status,
                 }
 
+    elif event_type in ["charge.refunded", "refund.created", "refund.updated"]:
+        metadata = (
+            data_object.get("metadata", {})
+            if isinstance(data_object, dict)
+            else getattr(data_object, "metadata", {})
+        ) or {}
+        if hasattr(metadata, "to_dict"):
+            metadata = metadata.to_dict()
+
+        booking_id = metadata.get("booking_id") if isinstance(metadata, dict) else getattr(metadata, "booking_id", None)
+
+        payment_intent = (
+            data_object.get("payment_intent")
+            if isinstance(data_object, dict)
+            else getattr(data_object, "payment_intent", None)
+        )
+        if isinstance(payment_intent, dict):
+            payment_intent = payment_intent.get("id")
+
+        charge_id = (
+            data_object.get("id")
+            if isinstance(data_object, dict)
+            else getattr(data_object, "id", None)
+        )
+
+        order = None
+        if booking_id and str(booking_id).isdigit():
+            order = get_service_order_by_id(db=db, order_id=int(booking_id))
+        if not order and payment_intent:
+            order = db.query(Order).filter(Order.transaction_id == str(payment_intent)).first()
+        if not order and charge_id:
+            order = db.query(Order).filter(Order.transaction_id == str(charge_id)).first()
+
+        if order:
+            order.payment_status = "refunded"
+            order.status = "cancelled"
+            if not order.refunded_at:
+                order.refunded_at = datetime.now(timezone.utc)
+            db.commit()
+            return {
+                "received": True,
+                "event": event_type,
+                "booking_id": order.id,
+                "status": order.status,
+                "payment_status": order.payment_status,
+                "transaction_id": order.transaction_id,
+            }
+
     return {"received": True, "event": event_type}
