@@ -12,6 +12,7 @@ from src.models.provider.coach_profile import (
 from src.models.provider.product import CoachProduct
 from src.models.provider.service import CoachService, CoachServiceBenefit
 from src.models.client.app_rating import AppRating
+from src.models.client.coach_favorite import CoachFavorite
 from src.models.client.order import Order
 from src.models.client.product_purchase import ProductPurchase
 from src.models.client.service_booking import ServiceBooking
@@ -33,6 +34,7 @@ __all__ = [
     "CoachProduct",
     "ProductPurchase",
     "AppRating",
+    "CoachFavorite",
     "Order",
     "ServiceBooking",
     "ServiceOrder",
