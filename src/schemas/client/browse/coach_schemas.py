@@ -40,6 +40,8 @@ class CoachProfileListItemResponse(BaseModel):
     completed_sessions_count: int = 0
     starting_price: str | None = None
     is_favorited: bool = False
+    affiliate_status: str | None = None
+    affiliate_code: str | None = None
     profile_photo: str | None = None
     introduction_video: str | None = None
     introduction_video_duration: int | None = None
@@ -47,6 +49,7 @@ class CoachProfileListItemResponse(BaseModel):
     linkedin_url: str | None = None
     affiliate_commission_percent: str = "20.00"
     on_call_enabled: bool = False
+    timezone: str = ""
     auto_approve_affiliates: bool = True
     about: str | None = None
     headline: str | None = None
